@@ -20,6 +20,7 @@ function sendData()
   si7021.read(OSS)
   h = si7021.getHumidity()/100
   t = si7021.getTemperature()/100
+  napeti = adc.readvdd33()/100
 
   print("Humidity: "..h.." %")
   print("Temperature: "..t.." C")
@@ -27,6 +28,7 @@ function sendData()
   
   m:publish(base.."temperature",       string.format("%.1f",t),0,0)  
   m:publish(base.."humidity",          string.format("%.1f",h),0,0)  
+  m:publish(base.."voltage",           string.format("%.2f",napeti),0,0)  
   m:publish(base.."VersionSW",         VersionSW,0,0)  
 
   --tmr.delay(10000)
