@@ -20,7 +20,7 @@ function sendData()
   si7021.read(OSS)
   h = si7021.getHumidity()/100
   t = si7021.getTemperature()/100
-  napeti = adc.readvdd33()/100
+  napeti = adc.readvdd33()/1000
 
   print("Humidity: "..h.." %")
   print("Temperature: "..t.." C")
@@ -28,8 +28,10 @@ function sendData()
   
   m:publish(base.."temperature",       string.format("%.1f",t),0,0)  
   m:publish(base.."humidity",          string.format("%.1f",h),0,0)  
-  m:publish(base.."voltage",           string.format("%.2f",napeti),0,0)  
-  m:publish(base.."VersionSW",         VersionSW,0,0)  
+  if napeti~=nil then
+    m:publish(base.."voltage",         string.format("%.2f",napeti),0,0)  
+  end
+  m:publish(base.."VersionSW",         string.format("%.2f",versionSW),0,0)  
 
   --tmr.delay(10000)
 
@@ -54,7 +56,7 @@ tmr.alarm(0, 1000, tmr.ALARM_AUTO, function()
       print("Mqtt Connected to:" .. Broker.." - "..base) 
       tmr.alarm(1, 5000, tmr.ALARM_SINGLE, function()
         print("hajiiiiiii")
-        node.dsleep(60000000)
+        node.dsleep(600000000)
       end)
       tmr.alarm(0, 5, tmr.ALARM_SINGLE, function()
         sendData() 
