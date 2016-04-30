@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE eagle SYSTEM "eagle.dtd">
-<eagle version="6.5.0">
+<eagle version="7.3.0">
 <drawing>
 <settings>
 <setting alwaysvectorfont="no"/>
@@ -4152,6 +4152,7 @@ Source: http://www.murata.com .. GRM43DR72E224KW01.pdf</description>
 <part name="PIN2" library="con-amp-quick" deviceset="M03" device=""/>
 <part name="R1" library="rcl" deviceset="R-EU_" device="0207/7"/>
 <part name="LED" library="con-wago-508" deviceset="W237-02P" device=""/>
+<part name="GND5" library="supply1" deviceset="GND" device=""/>
 </parts>
 <sheets>
 <sheet>
@@ -4175,6 +4176,7 @@ Source: http://www.murata.com .. GRM43DR72E224KW01.pdf</description>
 <instance part="R1" gate="G$1" x="134.62" y="88.9"/>
 <instance part="LED" gate="-1" x="144.78" y="88.9" rot="R180"/>
 <instance part="LED" gate="-2" x="144.78" y="93.98" rot="R180"/>
+<instance part="GND5" gate="1" x="111.76" y="96.52"/>
 </instances>
 <busses>
 </busses>
@@ -4219,6 +4221,10 @@ Source: http://www.murata.com .. GRM43DR72E224KW01.pdf</description>
 <segment>
 <pinref part="NAPAJENI" gate="-1" pin="KL"/>
 <pinref part="GND4" gate="1" pin="GND"/>
+</segment>
+<segment>
+<pinref part="U$1" gate="G$1" pin="GPIO15"/>
+<pinref part="GND5" gate="1" pin="GND"/>
 </segment>
 </net>
 <net name="N$2" class="0">
