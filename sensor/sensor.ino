@@ -1,3 +1,5 @@
+unsigned long start=millis();
+
 #include <ESP8266WiFi.h>
 #include <Wire.h>
 #include <SI7021.h>
@@ -39,10 +41,16 @@ void setup() {
   Serial.println(ssid);
   
   WiFi.begin(ssid, password);
-    
+  
+  byte cyklu=0;  
   while (WiFi.status() != WL_CONNECTED) {
+    cyklu++;
     delay(500);
     Serial.print(".");
+    if (cyklu*500>10000) {
+      Serial.print("Wifi unavailable, go to deepsleep for 5 minutes");
+      ESP.deepSleep(300 * 1000000, WAKE_RF_DEFAULT);
+    }
   }
 
   Serial.println("");
@@ -71,7 +79,9 @@ void loop() {
     Serial.print(F("xivelyclientHumidity.put returned "));
     Serial.println(ret);
   }
- 
+  Serial.print("Start duration:");
+  Serial.print(millis()-start);
+  Serial.println(" ms.");
   Serial.println("Entering deep sleep mode");
   ESP.deepSleep(SLEEP_DELAY_IN_SECONDS * 1000000, WAKE_RF_DEFAULT);
   //delay(60000);
