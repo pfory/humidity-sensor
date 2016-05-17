@@ -60,6 +60,19 @@ end
 
 m = mqtt.Client(deviceID, 180, "datel", "hanka12")  
 
+<<<<<<< HEAD
+start=tmr.now()
+
+tmr.alarm(0, 1000, tmr.ALARM_AUTO, function() 
+  if (tmr.now()-start)>20000000 then //pojistna funkce pri nedostupnosti site aby se nevybili baterie
+    print("nelze se spojit tak hajiiiiiii")
+    node.dsleep(600000000)
+  end
+  print ("Connecting to Wifi... ")
+  if wifi.sta.status() == 5 and wifi.sta.getip() ~= nil then 
+    print ("Wifi connected")
+    tmr.stop(0) 
+=======
 
 
 
@@ -73,6 +86,7 @@ function loop()
   if wifi.sta.status() == 5 then
     -- Stop the loop
     tmr.stop(0)
+>>>>>>> branch 'master' of https://github.com/pfory/humidity-sensor.git
     m:connect(Broker, 31883, 0, function(conn) 
       print("Connected to MQTT")
       sendData()
