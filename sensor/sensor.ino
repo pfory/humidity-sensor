@@ -9,8 +9,9 @@ unsigned long start=millis();
 const char* ssid = "Datlovo";
 const char* password = "Nu6kMABmseYwbCoJ7LyG";
 
-#define SDA 0 // GPIO0 on ESP-01 module
-#define SCL 2 // GPIO2 on ESP-01 module
+#define SDA 12 // GPI12 on ESP-201 module
+#define SCL 14 // GPI14 on ESP-201 module
+#define LED 1  // GPIO5 on ESP-201 module
 
 SI7021 sensor;
 
@@ -39,6 +40,13 @@ void setup() {
   Serial.println();
   Serial.print("Connecting to ");
   Serial.println(ssid);
+  pinMode(5, OUTPUT);
+  digitalWrite(5, LOW);
+  delay(1000);
+  digitalWrite(5, HIGH);
+  delay(1000);
+  digitalWrite(5, LOW);
+  delay(1000);
   
   WiFi.begin(ssid, password);
   
@@ -62,6 +70,7 @@ void setup() {
 
 
 void loop() {
+  Serial.println("Hlavni smycka...");
   float temperature=sensor.getCelsiusHundredths();
   float humidity=sensor.getHumidityPercent();
   Serial.print("Temperature:");
