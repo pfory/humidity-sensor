@@ -1,8 +1,15 @@
 --Init  
-bootTime = tmr.now()
-base = "/home/sklenik/esp10/"
-deviceID = "ESP8266 Sklenik "..node.chipid()
-maxStartTime = 20000000 --20sec
+bootTime                   = tmr.now()
+base                       = "/home/sklenik/esp10/"
+deviceID                   = "ESP8266 Sklenik "..node.chipid()
+maxStartTime               = 10000 --10sec
+sleepDelayWhenNoConnection = 600000000
+microsToSec                = 1000000
+
+tmr.alarm(1, maxStartTime, tmr.ALARM_SINGLE, function()
+  print("No connection. Going to sleep for 600 sec.")
+  node.dsleep(sleepDelayWhenNoConnection)
+end)
 
 cfg=
 {
@@ -23,7 +30,7 @@ time_between_sensor_readings = 900
 
 Broker="88.146.202.186"  
 
-versionSW         = 0.31
+versionSW         = 0.32
 versionSWString   = "Sklenik v" 
 print(versionSWString .. versionSW)
 
@@ -45,12 +52,12 @@ function sendData()
   m:publish(base.."temperature",                    string.format("%.1f",t),0,0, function(conn)
     m:publish(base.."humidity",                     string.format("%.1f",h),0,0, function(conn)
       m:publish(base.."voltage",                    string.format("%.2f",napeti),0,0, function(conn)   
-        m:publish(base.."bootTime",                 string.format("%.2f",(tmr.now()-bootTime)/1000000),0,0, function(conn)   
+        m:publish(base.."bootTime",                 string.format("%.2f",(tmr.now()-bootTime)/microsToSec),0,0, function(conn)   
           m:publish(base.."VersionSW",              string.format("%.2f",versionSW),0,0, function(conn)   
-            print("Boot time:"..((tmr.now()-bootTime)/1000000))
-            time_between_sensor_readings = time_between_sensor_readings - ((tmr.now()-bootTime) / 1000000)
+            print("Boot time:"..((tmr.now()-bootTime)/microsToSec))
+            time_between_sensor_readings = time_between_sensor_readings - ((tmr.now()-bootTime) / microsToSec)
             print("Going to sleep for "..time_between_sensor_readings.." sec.")
-            node.dsleep(time_between_sensor_readings*1000000)
+            node.dsleep(time_between_sensor_readings*microsToSec)
           end)
         end)
       end)
@@ -60,15 +67,10 @@ end
 
 m = mqtt.Client(deviceID, 180, "datel", "hanka12")  
 
-start=tmr.now()
-
 uart.write(0,"Connecting to Wifi")
-function loop() 
+tmr.alarm(0, 500, tmr.ALARM_AUTO, function()
+--function loop() 
   uart.write(0,".")
-  if (tmr.now() - bootTime) > maxStartTime then
-    print("No connection. Going to sleep for 600 sec.")
-    node.dsleep(600000000)
-  end 
   if wifi.sta.status() == 5 then
     -- Stop the loop
     print ("Wifi connected")
@@ -79,6 +81,7 @@ function loop()
       sendData()
     end )
   end
-end
+end)
         
-tmr.alarm(0, 1000, 1, function() loop() end)
+--tmr.alarm(0, 500, 1, function() loop() end)
+
