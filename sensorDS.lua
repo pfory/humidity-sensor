@@ -42,6 +42,7 @@ si7021.init(SDA_PIN, SCL_PIN)
 function sendData()
   si7021.read(OSS)
   h = si7021.getHumidity()/100
+  if h>100.0 then h=100 end
   t = si7021.getTemperature()/100
   napeti = adc.readvdd33()/1000
   if napeti==nil then napeti=0 end
