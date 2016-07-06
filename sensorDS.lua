@@ -3,8 +3,16 @@ bootTime                   = tmr.now()
 base                       = "/home/sklenik/esp10/"
 deviceID                   = "ESP8266 Sklenik "..node.chipid()
 maxStartTime               = 10000 --10sec
-sleepDelayWhenNoConnection = 600000000
+sleepDelayWhenNoConnection = 3600000000 --1 hour
 microsToSec                = 1000000
+tempAndHumidityKoef        = 100
+mVoltsToVolts              = 1000
+
+--- INTERVAL ---
+-- In seconds. Remember that the sensor reading, 
+-- reboot and wifi reconnect takes a few seconds
+time_between_sensor_readings = 3600  --1 hour
+
 
 tmr.alarm(1, maxStartTime, tmr.ALARM_SINGLE, function()
   print("No connection. Going to sleep for 600 sec.")
@@ -23,14 +31,15 @@ wifi.setmode(wifi.STATION)
 wifi.sta.config("Datlovo","Nu6kMABmseYwbCoJ7LyG")
 wifi.setphymode(wifi.PHYMODE_N)
 
---- INTERVAL ---
--- In seconds. Remember that the sensor reading, 
--- reboot and wifi reconnect takes a few seconds
-time_between_sensor_readings = 900
+if adc.force_init_mode(adc.INIT_VDD33)
+then
+  node.restart()
+  return -- don't bother continuing, the restart is scheduled
+end
 
 Broker="88.146.202.186"  
 
-versionSW         = 0.32
+versionSW         = 0.33
 versionSWString   = "Sklenik v" 
 print(versionSWString .. versionSW)
 
@@ -41,9 +50,10 @@ si7021.init(SDA_PIN, SCL_PIN)
 
 function sendData()
   si7021.read(OSS)
-  h = si7021.getHumidity()/100
-  t = si7021.getTemperature()/100
-  napeti = adc.readvdd33()/1000
+  h = si7021.getHumidity()/tempAndHumidityKoef
+  if (h>100) then h=100 end
+  t = si7021.getTemperature()/tempAndHumidityKoef
+  napeti = adc.readvdd33()/mVoltsToVolts
   if napeti==nil then napeti=0 end
 
   print("Humidity: "..h.." %")
@@ -82,6 +92,4 @@ tmr.alarm(0, 500, tmr.ALARM_AUTO, function()
     end )
   end
 end)
-        
---tmr.alarm(0, 500, 1, function() loop() end)
 
