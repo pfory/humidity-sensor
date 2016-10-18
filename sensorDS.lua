@@ -19,17 +19,17 @@ tmr.alarm(1, maxStartTime, tmr.ALARM_SINGLE, function()
   node.dsleep(sleepDelayWhenNoConnection)
 end)
 
-cfg=
-{
-  ip = "192.168.1.103",
-  netmask = "255.255.255.0",
-  gateway = "192.168.1.1"
-}
+-- cfg=
+-- {
+  -- ip = "192.168.1.103",
+  -- netmask = "255.255.255.0",
+  -- gateway = "192.168.1.1"
+-- }
 
-wifi.sta.setip(cfg)
-wifi.setmode(wifi.STATION)
-wifi.sta.config("Datlovo","Nu6kMABmseYwbCoJ7LyG")
-wifi.setphymode(wifi.PHYMODE_N)
+-- wifi.sta.setip(cfg)
+-- wifi.setmode(wifi.STATION)
+-- wifi.sta.config("Datlovo","Nu6kMABmseYwbCoJ7LyG")
+-- wifi.setphymode(wifi.PHYMODE_N)
 
 if adc.force_init_mode(adc.INIT_VDD33)
 then
@@ -37,9 +37,9 @@ then
   return -- don't bother continuing, the restart is scheduled
 end
 
-Broker="88.146.202.186"  
+Broker="192.168.1.56"  
 
-versionSW         = 0.33
+versionSW         = 0.34
 versionSWString   = "Sklenik v" 
 print(versionSWString .. versionSW)
 
@@ -77,19 +77,27 @@ end
 
 m = mqtt.Client(deviceID, 180, "datel", "hanka12")  
 
-uart.write(0,"Connecting to Wifi")
-tmr.alarm(0, 500, tmr.ALARM_AUTO, function()
---function loop() 
-  uart.write(0,".")
-  if wifi.sta.status() == 5 then
-    -- Stop the loop
-    print ("Wifi connected")
-    print(wifi.sta.getip())
-    tmr.stop(0)
-    m:connect(Broker, 31883, 0, function(conn) 
-      print("Connected to MQTT")
-      sendData()
-    end )
-  end
+m:connect(Broker, 1883, 0, 1, function(conn) 
+  --mqtt_sub() --run the subscription function 
+  --print(wifi.sta.getip())
+  print("Mqtt Connected to:" .. Broker.." - "..base) 
+  sendData() 
 end)
+
+
+-- uart.write(0,"Connecting to Wifi")
+-- tmr.alarm(0, 500, tmr.ALARM_AUTO, function()
+--function loop() 
+  -- uart.write(0,".")
+  -- if wifi.sta.status() == 5 then
+    --Stop the loop
+    -- print ("Wifi connected")
+    -- print(wifi.sta.getip())
+    -- tmr.stop(0)
+    -- m:connect(Broker, 1883, 0, function(conn) 
+      -- print("Connected to MQTT")
+      -- sendData()
+    -- end )
+  -- end
+-- end)
 
