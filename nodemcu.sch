@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE eagle SYSTEM "eagle.dtd">
-<eagle version="7.7.0">
+<eagle version="7.3.0">
 <drawing>
 <settings>
 <setting alwaysvectorfont="no"/>
@@ -759,43 +759,41 @@ general purpose rectifier, 1 A</description>
 <net name="+3V3" class="0">
 <segment>
 <pinref part="+3V1" gate="G$1" pin="+3V3"/>
-<pinref part="U$1" gate="G$1" pin="VIN"/>
 <wire x1="66.04" y1="43.18" x2="58.42" y2="43.18" width="0.1524" layer="91"/>
-<wire x1="7.62" y1="30.48" x2="5.08" y2="30.48" width="0.1524" layer="91"/>
-<wire x1="5.08" y1="30.48" x2="5.08" y2="17.78" width="0.1524" layer="91"/>
-<wire x1="5.08" y1="17.78" x2="15.24" y2="17.78" width="0.1524" layer="91"/>
 <wire x1="15.24" y1="17.78" x2="66.04" y2="17.78" width="0.1524" layer="91"/>
-<wire x1="66.04" y1="17.78" x2="66.04" y2="43.18" width="0.1524" layer="91"/>
+<wire x1="66.04" y1="17.78" x2="66.04" y2="30.48" width="0.1524" layer="91"/>
 <pinref part="SENSOR" gate="G$1" pin="1"/>
+<wire x1="66.04" y1="30.48" x2="66.04" y2="43.18" width="0.1524" layer="91"/>
 <wire x1="66.04" y1="43.18" x2="81.28" y2="43.18" width="0.1524" layer="91"/>
 <junction x="66.04" y="43.18"/>
 <pinref part="D1" gate="1" pin="C"/>
 <wire x1="15.24" y1="5.08" x2="15.24" y2="7.62" width="0.1524" layer="91"/>
-<junction x="15.24" y="17.78"/>
 <pinref part="SL2" gate="G$1" pin="1"/>
 <wire x1="15.24" y1="7.62" x2="15.24" y2="17.78" width="0.1524" layer="91"/>
 <wire x1="15.24" y1="7.62" x2="22.86" y2="7.62" width="0.1524" layer="91"/>
 <wire x1="22.86" y1="7.62" x2="22.86" y2="5.08" width="0.1524" layer="91"/>
 <junction x="15.24" y="7.62"/>
+<pinref part="U$1" gate="G$1" pin="3V3@2"/>
+<wire x1="43.18" y1="30.48" x2="66.04" y2="30.48" width="0.1524" layer="91"/>
+<junction x="66.04" y="30.48"/>
 </segment>
 </net>
 <net name="GND" class="0">
 <segment>
 <pinref part="GND1" gate="1" pin="GND"/>
-<wire x1="60.96" y1="27.94" x2="60.96" y2="40.64" width="0.1524" layer="91"/>
+<wire x1="60.96" y1="27.94" x2="60.96" y2="33.02" width="0.1524" layer="91"/>
 <pinref part="SENSOR" gate="G$1" pin="2"/>
+<wire x1="60.96" y1="33.02" x2="60.96" y2="40.64" width="0.1524" layer="91"/>
 <wire x1="60.96" y1="40.64" x2="81.28" y2="40.64" width="0.1524" layer="91"/>
 <wire x1="60.96" y1="27.94" x2="45.72" y2="27.94" width="0.1524" layer="91"/>
 <wire x1="45.72" y1="27.94" x2="45.72" y2="15.24" width="0.1524" layer="91"/>
 <junction x="60.96" y="27.94"/>
-<pinref part="U$1" gate="G$1" pin="GND@1"/>
-<wire x1="7.62" y1="33.02" x2="0" y2="33.02" width="0.1524" layer="91"/>
-<wire x1="0" y1="33.02" x2="0" y2="15.24" width="0.1524" layer="91"/>
 <pinref part="X1" gate="-1" pin="KL"/>
-<wire x1="0" y1="15.24" x2="10.16" y2="15.24" width="0.1524" layer="91"/>
 <wire x1="10.16" y1="15.24" x2="10.16" y2="-2.54" width="0.1524" layer="91"/>
 <wire x1="45.72" y1="15.24" x2="10.16" y2="15.24" width="0.1524" layer="91"/>
-<junction x="10.16" y="15.24"/>
+<pinref part="U$1" gate="G$1" pin="GND@3"/>
+<wire x1="43.18" y1="33.02" x2="60.96" y2="33.02" width="0.1524" layer="91"/>
+<junction x="60.96" y="33.02"/>
 </segment>
 </net>
 <net name="N$1" class="0">
@@ -843,6 +841,12 @@ general purpose rectifier, 1 A</description>
 <wire x1="15.24" y1="-2.54" x2="22.86" y2="-2.54" width="0.1524" layer="91"/>
 <wire x1="22.86" y1="-2.54" x2="22.86" y2="2.54" width="0.1524" layer="91"/>
 <junction x="15.24" y="-2.54"/>
+</segment>
+</net>
+<net name="N$6" class="0">
+<segment>
+<pinref part="U$1" gate="G$1" pin="VIN"/>
+<wire x1="7.62" y1="30.48" x2="5.08" y2="30.48" width="0.1524" layer="91"/>
 </segment>
 </net>
 </nets>

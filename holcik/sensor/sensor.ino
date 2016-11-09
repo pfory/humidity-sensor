@@ -6,7 +6,7 @@ unsigned long start=millis();
 #include <Xively.h>
 #include <Ethernet.h>
 
-//#define test
+#define test
 #ifdef test
 const char* ssid = "Datlovo";
 const char* password = "Nu6kMABmseYwbCoJ7LyG";
@@ -15,8 +15,8 @@ const char* ssid = "Fusal2";
 const char* password = "1860918609";
 #endif
 
-#define SDA 12 // GPI12 on ESP-201 module
-#define SCL 14 // GPI14 on ESP-201 module
+#define SDA 12 // D6 - GPI12 on ESP-201 module
+#define SCL 14 // D5 - GPI14 on ESP-201 module
 #define LED 1  // GPIO5 on ESP-201 module
 
 SI7021 sensor;
@@ -34,15 +34,17 @@ XivelyDatastream datastreamsHumidity[] = {
   XivelyDatastream(BootTimeID,        strlen(BootTimeID),       DATASTREAM_FLOAT)
 };
 
-char xivelyKey[]                = "VgoUxsEYlsN65fvTsBh8Sp9919cpMmv1cI2MoOzgHPnNADMa";
-#define xivelyFeedHumidity         395999474
+//char xivelyKey[]                = "RTlChENFnP19hPBWvdxb2uaPNaOGKzp8T4BiG5iUw7HDaIQX";
+char xivelyKey[]                = "KuWv6gu9rmFFqJ2maqE6KSCN8FG3eGDNx0EAQfaXihIEEzco";
+//#define xivelyFeedHumidity         273699700
+#define xivelyFeedHumidity         1827028761
 
 XivelyFeed feedHumidity(xivelyFeedHumidity,         datastreamsHumidity,       4);
 
 WiFiClient client;
 XivelyClient xivelyclientHumidity(client);
 
-#define SLEEP_DELAY_IN_SECONDS 900 
+#define SLEEP_DELAY_IN_SECONDS 60 
 #define ONECYCLE_IN_MS 1000 
 #define TIMEOUTFORWIFI_IN_MS 10000 
 #define MICROSECOND 1000000
@@ -56,7 +58,7 @@ ADC_MODE(ADC_VCC);
 #define staticIP
 #ifdef staticIP
 #ifdef test
-IPAddress ip(192,168,1,165);  //Node static IP
+IPAddress ip(192,168,1,166);  //Node static IP
 IPAddress gateway(192,168,1,2);
 IPAddress subnet(255,255,255,0);
 #else
@@ -111,7 +113,7 @@ void setup() {
 
 void loop() {
   digitalWrite(5, LOW);
-  Serial.println("Hlavni smycka...");
+  Serial.println("Hlavni smycka....");
   float temperature=sensor.getCelsiusHundredths();
   float humidity=sensor.getHumidityPercent();
   Serial.print("Temperature:");
