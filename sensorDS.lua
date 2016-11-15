@@ -70,4 +70,25 @@ m:connect(Broker, 1883, 0, 1, function(conn)
   --print(wifi.sta.getip())
   print("Mqtt Connected to:" .. Broker.." - "..base) 
   sendData() 
+<<<<<<< HEAD
 end)
+=======
+end)
+
+
+-- uart.write(0,"Connecting to Wifi")
+-- tmr.alarm(0, 500, tmr.ALARM_AUTO, function()
+--function loop() 
+  -- uart.write(0,".")
+  -- if wifi.sta.status() == 5 then
+    --Stop the loop
+    -- print ("Wifi connected")
+    -- print(wifi.sta.getip())
+    -- tmr.stop(0)
+    -- m:connect(Broker, 1883, 0, function(conn) 
+      -- print("Connected to MQTT")
+      -- sendData()
+    -- end )
+  -- end
+-- end)
+>>>>>>> fdfb983d96ecd4e694f0ce0ceea39e7b94d051a2
