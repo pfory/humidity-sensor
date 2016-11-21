@@ -1,6 +1,8 @@
+#include <ESP8266WiFiAP.h>
+
 void setup() {
-	Serial.begin(9600);
-	Serial.println("test");
+  wifi.begin()
 }
 
-void loop() {}
+void loop() {
+}
