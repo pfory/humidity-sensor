@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE eagle SYSTEM "eagle.dtd">
-<eagle version="7.3.0">
+<eagle version="7.7.0">
 <drawing>
 <settings>
 <setting alwaysvectorfont="no"/>
@@ -4276,7 +4276,6 @@ Source: http://www.mouser.com/ds/2/392/products_18-2245.pdf</description>
 <part name="S1" library="switch-dil" deviceset="DIP03YL" device=""/>
 <part name="R1" library="rcl" deviceset="R-EU_" device="0207/10" value="10k"/>
 <part name="R2" library="rcl" deviceset="R-EU_" device="0207/10" value="10k"/>
-<part name="+3V2" library="supply1" deviceset="+3V3" device=""/>
 </parts>
 <sheets>
 <sheet>
@@ -4294,7 +4293,6 @@ Source: http://www.mouser.com/ds/2/392/products_18-2245.pdf</description>
 <instance part="S1" gate="1" x="-15.24" y="50.8"/>
 <instance part="R1" gate="G$1" x="63.5" y="58.42" rot="R90"/>
 <instance part="R2" gate="G$1" x="60.96" y="55.88" rot="R90"/>
-<instance part="+3V2" gate="G$1" x="-22.86" y="22.86" rot="R90"/>
 </instances>
 <busses>
 </busses>
@@ -4302,7 +4300,8 @@ Source: http://www.mouser.com/ds/2/392/products_18-2245.pdf</description>
 <net name="+3V3" class="0">
 <segment>
 <pinref part="+3V1" gate="G$1" pin="+3V3"/>
-<wire x1="66.04" y1="43.18" x2="58.42" y2="43.18" width="0.1524" layer="91"/>
+<wire x1="66.04" y1="43.18" x2="60.96" y2="43.18" width="0.1524" layer="91"/>
+<wire x1="60.96" y1="43.18" x2="58.42" y2="43.18" width="0.1524" layer="91"/>
 <wire x1="15.24" y1="17.78" x2="66.04" y2="17.78" width="0.1524" layer="91"/>
 <wire x1="66.04" y1="17.78" x2="66.04" y2="30.48" width="0.1524" layer="91"/>
 <pinref part="SENSOR" gate="G$1" pin="1"/>
@@ -4319,29 +4318,17 @@ Source: http://www.mouser.com/ds/2/392/products_18-2245.pdf</description>
 <pinref part="U$1" gate="G$1" pin="3V3@2"/>
 <wire x1="43.18" y1="30.48" x2="66.04" y2="30.48" width="0.1524" layer="91"/>
 <junction x="66.04" y="30.48"/>
-</segment>
-<segment>
-<pinref part="S1" gate="1" pin="1"/>
-<pinref part="S1" gate="1" pin="2"/>
-<wire x1="-15.24" y1="43.18" x2="-17.78" y2="43.18" width="0.1524" layer="91"/>
-<wire x1="-15.24" y1="43.18" x2="-15.24" y2="22.86" width="0.1524" layer="91"/>
-<junction x="-15.24" y="43.18"/>
 <pinref part="R1" gate="G$1" pin="1"/>
 <wire x1="63.5" y1="50.8" x2="63.5" y2="53.34" width="0.1524" layer="91"/>
 <pinref part="R2" gate="G$1" pin="1"/>
 <wire x1="60.96" y1="50.8" x2="63.5" y2="50.8" width="0.1524" layer="91"/>
-<wire x1="60.96" y1="50.8" x2="53.34" y2="50.8" width="0.1524" layer="91"/>
-<wire x1="53.34" y1="50.8" x2="48.26" y2="50.8" width="0.1524" layer="91"/>
-<wire x1="48.26" y1="50.8" x2="48.26" y2="53.34" width="0.1524" layer="91"/>
 <junction x="60.96" y="50.8"/>
+<wire x1="60.96" y1="50.8" x2="60.96" y2="43.18" width="0.1524" layer="91"/>
+<junction x="60.96" y="43.18"/>
 <pinref part="U$1" gate="G$1" pin="3V3@1"/>
-<wire x1="48.26" y1="53.34" x2="43.18" y2="53.34" width="0.1524" layer="91"/>
-<wire x1="-15.24" y1="22.86" x2="53.34" y2="22.86" width="0.1524" layer="91"/>
-<wire x1="53.34" y1="22.86" x2="53.34" y2="50.8" width="0.1524" layer="91"/>
-<junction x="53.34" y="50.8"/>
-<pinref part="+3V2" gate="G$1" pin="+3V3"/>
-<wire x1="-20.32" y1="22.86" x2="-15.24" y2="22.86" width="0.1524" layer="91"/>
-<junction x="-15.24" y="22.86"/>
+<wire x1="43.18" y1="53.34" x2="53.34" y2="53.34" width="0.1524" layer="91"/>
+<wire x1="53.34" y1="53.34" x2="53.34" y2="50.8" width="0.1524" layer="91"/>
+<wire x1="53.34" y1="50.8" x2="60.96" y2="50.8" width="0.1524" layer="91"/>
 </segment>
 </net>
 <net name="GND" class="0">
@@ -4361,6 +4348,13 @@ Source: http://www.mouser.com/ds/2/392/products_18-2245.pdf</description>
 <wire x1="0" y1="43.18" x2="0" y2="15.24" width="0.1524" layer="91"/>
 <wire x1="0" y1="15.24" x2="10.16" y2="15.24" width="0.1524" layer="91"/>
 <junction x="10.16" y="15.24"/>
+<pinref part="S1" gate="1" pin="1"/>
+<pinref part="S1" gate="1" pin="2"/>
+<wire x1="-15.24" y1="43.18" x2="-17.78" y2="43.18" width="0.1524" layer="91"/>
+<wire x1="-17.78" y1="43.18" x2="-17.78" y2="15.24" width="0.1524" layer="91"/>
+<junction x="-17.78" y="43.18"/>
+<wire x1="-17.78" y1="15.24" x2="0" y2="15.24" width="0.1524" layer="91"/>
+<junction x="0" y="15.24"/>
 </segment>
 </net>
 <net name="N$1" class="0">
