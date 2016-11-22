@@ -20,15 +20,18 @@ Zaøízení musí bıt pøipojené k napájení, napájení z USB je kvùli spotøebì v reim
 -----------
 Pøepínaè 1 (reim) je v poloze ON (nastavení), pøepínaè 2 (spánek) je v poloze OFF, pøepínaè 3 (flash) je v poloze ON
 
-Zaøízení se pøepne do reimu AP (pøístupovı bod). Po zadaní adresy 192.168.4.1 v prohlíeèi se zobrazí formuláø pro nastavení sítì:
-AP SSID - identifikaèní znak sítì
+Zaøízení se pøepne do reimu AP (pøístupovı bod). V seznamu Wifi sítí na PC se zobrazí novı pøístupovı bod s názvem XXXXX. 
+K tomuto pøístupovému bodu se pøíhlásíme heslem XXXXX.
+Po zadaní adresy 192.168.4.1 v prohlíeèi se zobrazí formuláø pro nastavení sítì:
+AP SSID - identifikaèní znak sítì ke které se bude zaøízení pøipojovat.
 AP PASSWORD - heslo k síti
-IP - adresa zaøízení napø. 192.168.1.200
+IP - adresa zaøízení napø. 192.168.1.200. Adresa musí bıt v rozsahu sítì, ke které se pøipojujeme.
 Maska - síová maska napø. 255.255.255.0
-Gateway - brána napø. 192.168.1.1
+Gateway - brána napø. 192.168.1.1, pøístupovı bod do internetu.
 Xively API key - klíè pro pøístup ke slubì Xively
 Xively feed ID - identifikace feedu
-Prodleva mezi mìøeními - prodleva v sekundách mezi jednotlivımi mìøeními
+Prodleva mezi mìøeními - prodleva v sekundách mezi jednotlivımi mìøeními. Doporuèuji nastavit více ne 300s kvùli vıdri baterií.
+
 Pøed uloením pøepnout pøepínaè 1 (reim) do polohy ON (mìøení).
 Nastavení se uloí a zaøízení se restartuje. Zaøízení je dále v reimu STA (stanice). 
 
@@ -36,7 +39,8 @@ Nastavení se uloí a zaøízení se restartuje. Zaøízení je dále v reimu STA (stan
 -------------
 Pøepínaè 1 (reim) je v poloze OFF (mìøení), pøepínaè 2 (spánek) je v poloze OFF, pøepínaè 3 (flash) je v poloze ON
 
-Po zadání adresy IP zaøízení (nastavené v bodì 1.Nastavení) do prohlíeèe se zobrazí formuláø jako v pøípadì nastavení a je mono mìnit parametry sítì, xively pøístupu a prodlevy jako v pøípadì nastavení.
+Po zadání adresy IP zaøízení (nastavené v bodì 1.Nastavení) do prohlíeèe se zobrazí formuláø jako v pøípadì nastavení 
+a je mono mìnit parametry sítì, xively pøístupu a prodlevy jako v pøípadì nastavení.
 V pøípadì provedení zmìn je nutné údaje uloit. 
 Dále se ve formuláøi zobrazují namìøené údaje. Perioda mìøení je v tomto pøípadì 10s.
 
