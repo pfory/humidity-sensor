@@ -88,18 +88,6 @@ void loop() {
              // show the string on the monitor
              Serial.println(HttpHeader);
              
-            char * pch;
-            byte s[HttpHeader.length()];
-            HttpHeader.getBytes(s, HttpHeader.length());
-            pch = strtok((char*)s,"?&");
-            while (pch != NULL) {
-              Serial.println(pch);
-              // char *c = pch;
-              // c = strtok(pch,"=");
-              // Serial.println(c);
-              pch = strtok (NULL, "?&");
-            }
-
              String ssid="Datlovo";
              String passw="Nu6kMABmseYwbCoJ7LyG";
              String ip="192.168.1.144";
@@ -108,6 +96,20 @@ void loop() {
              String apiKey="RTlChENFnP19hPBWvdxb2uaPNaOGKzp8T4BiG5iUw7HDaIQX";
              String feedId="273699700";
              String delay="3600";
+
+             
+             char * pch;
+             byte s[HttpHeader.length()];
+             HttpHeader.getBytes(s, HttpHeader.length());
+             pch = strtok((char*)s,"?&");
+             while (pch != NULL) {
+               Serial.println(pch);
+               if (startsWith('ssid',pch)) {
+                strncpy(ssid,pch+6,10);
+               }
+               pch = strtok (NULL, "?&");
+             }
+
              
              client.println("HTTP/1.1 200 OK");
              client.println("Content-Type: text/html");
@@ -135,4 +137,10 @@ void loop() {
       }
     }
   }
+}
+
+bool startsWith(const char *pre, const char *str) {
+    size_t lenpre = strlen(pre),
+           lenstr = strlen(str);
+    return lenstr < lenpre ? false : strncmp(pre, str, lenpre) == 0;
 }
