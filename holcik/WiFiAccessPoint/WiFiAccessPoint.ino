@@ -6,11 +6,14 @@
 #define MaxHeaderLength 1600
 byte mode=1;
 
+#include "FS.h"
+
 /* Set these to your desired credentials. */
 const char *ssid = "ESPHum";
 const char *password = "hum007";
 
 String HttpHeader = String(MaxHeaderLength);
+String HttpHeaderBak = String(MaxHeaderLength);
 
 WiFiServer server(80);
 
@@ -66,6 +69,16 @@ void setup() {
     server.begin();
     Serial.println("HTTP server started");
     HttpHeader = "";
+    SPIFFS.begin();
+    // open file for reading
+    File f = SPIFFS.open("/config.txt", "r");
+    if (!f) {
+      Serial.println("file open failed");
+    } else {
+      Serial.println("====== Reading from SPIFFS file =======");
+      HttpHeaderBak=f.readStringUntil('\n');
+      Serial.println(HttpHeaderBak);
+    }
   }
 }
 
@@ -85,29 +98,86 @@ void loop() {
            }
            //if HTTP request has ended
            if (c == '\n') {
+             if (HttpHeaderBak.length()>0) {
+               HttpHeader=HttpHeaderBak;
+               HttpHeaderBak="";
+             }
              // show the string on the monitor
+             Serial.print("HttpHeader:");
              Serial.println(HttpHeader);
              
-             String ssid="Datlovo";
-             String passw="Nu6kMABmseYwbCoJ7LyG";
-             String ip="192.168.1.144";
-             String mask="255.255.225.0";
-             String gate="192.168.1.1";
-             String apiKey="RTlChENFnP19hPBWvdxb2uaPNaOGKzp8T4BiG5iUw7HDaIQX";
-             String feedId="273699700";
-             String delay="3600";
+            // open file for writing
+            File f = SPIFFS.open("/config.txt", "w");
+            if (!f) {
+                Serial.println("file open failed");
+            }
+            Serial.println("====== Writing to SPIFFS file =========");
+            // write 10 strings to file
+            f.println(HttpHeader);
+            f.close();
 
+             String ssid;
+             String passw;
+             String ip;
+             String mask;
+             String gate;
+             String apiKey;
+             String feedId;
+             String delay;
              
-             char * pch;
+             char *pch;
+             byte typ=0;
              byte s[HttpHeader.length()];
              HttpHeader.getBytes(s, HttpHeader.length());
-             pch = strtok((char*)s,"?&");
+             pch = strtok((char*)s,"?&=");
              while (pch != NULL) {
                Serial.println(pch);
-               if (startsWith('ssid',pch)) {
-                strncpy(ssid,pch+6,10);
+               if (startsWith("ssid",pch)) {
+                 typ=1;
+               } else if (startsWith("passw",pch)) {
+                 typ=2;
+               } else if (startsWith("ip",pch)) {
+                 typ=3;
+               } else if (startsWith("mask",pch)) {
+                 typ=4;
+               } else if (startsWith("gate",pch)) {
+                 typ=5;
+               } else if (startsWith("APIiKey",pch)) {
+                 typ=6;
+               } else if (startsWith("FeedId",pch)) {
+                 typ=7;
+               } else if (startsWith("delay",pch)) {
+                 typ=8;
+               } else if (startsWith("ulozit",pch)) {
+                 typ=9;
+               } else if (startsWith("reset",pch)) {
+                 typ=10;
                }
-               pch = strtok (NULL, "?&");
+
+               pch = strtok (NULL, "?&=");
+               if (typ==1) {
+                 ssid=pch;
+               } else if (typ==2) {
+                 passw=pch;
+               } else if (typ==3) {
+                 ip=pch;
+               } else if (typ==4) {
+                 mask=pch;
+               } else if (typ==5) {
+                 gate=pch;
+               } else if (typ==6) {
+                 apiKey=pch;
+               } else if (typ==7) {
+                 feedId=pch;
+               } else if (typ==8) {
+                 delay=pch;
+               } else if (typ==9) {
+                 
+               } else if (typ==10) {
+                 // //reset 
+                 // Serial.println("ESP RESTART NOW");
+                 // ESP.restart();
+               }
              }
 
              
@@ -117,7 +187,9 @@ void loop() {
              client.println();
              client.print("<form method=get>");
              client.print("<span style='font-weight:bold; font-size:20pt;'>Vlhkoměr</span><span style='font-style:italic;'>Verze FW: 1.0.1</span><br/><br/>");
-             client.print("<table><tr><td style='text-align:right;'>AP SSID:</td><td><input type='text' name=ssid value='" + ssid + "'/></td></tr>");
+             client.print("<table><tr><td style='text-align:right;'>AP SSID:</td><td><input type='text' name=ssid value='");
+             client.print(ssid);
+             client.print("'/></td></tr>");
              client.print("<tr><td style='text-align:right;'>AP password:</td><td><input type='text' name=passw value='" + passw + "'/></td></tr>");
              client.print("<tr><td style='text-align:right;'>IP:</td><td><input type='text' name='ip' maxlength='15' value='" + ip + "'/></td></tr>");
              client.print("<tr><td style='text-align:right;'>Maska:</td><td><input type='text' name='mask' maxlength='15' value='" + mask + "'/></td></tr>");
@@ -125,7 +197,9 @@ void loop() {
              client.print("<tr><td style='text-align:right;'>Xively API key:</td><td><input type='text' name='APIkey' value='" + apiKey + "'/></td></tr>");
              client.print("<tr><td style='text-align:right;'>Feed ID:</td><td><input type='text' name='FeedID' value='" + feedId + "'/></td></tr>");
              client.print("<tr><td style='text-align:right;'>Prodleva mezi měřeními [s]:</td><td><input type='text' name='delay' maxlength='5' value='" + delay + "'/></td></tr>");
-             client.print("<tr><td colspan='2' style='text-align:center'><input type=submit name=submit value='Uložit'></td></tr></table></form>");
+             client.print("<tr><td style='text-align:right'><input type=submit name=ulozit value='Uložit'></td>");
+             // client.print("<td style='text-align:right'><input type=submit name=reset value='Reset'></td></tr>");
+             client.print("</table></form>");
              client.print("</body></html>");
 
              //clearing string for next read
