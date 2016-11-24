@@ -84,27 +84,81 @@ void setup() {
     server.begin();
     Serial.println("HTTP server started");
     HttpHeader = "";
+
     SPIFFS.begin();
-    // open file for reading
-    File f = SPIFFS.open("/config.txt", "r");
-    if (!f) {
-      Serial.println("file open failed");
-    } else {
-      Serial.println("====== Reading from SPIFFS file =======");
-      HttpHeaderBak=f.readStringUntil('\n');
-      Serial.println(HttpHeaderBak);
-    }
+
+    readConfig();
+    
   } else if (mode==3) {
-    ssid = "Datlovo";
-    password = "Nu6kMABmseYwbCoJ7LyG";
- 
-    IPAddress ip(192,168,1,166);  //Node static IP
-    IPAddress gateway(192,168,1,2);
-    IPAddress subnet(255,255,255,0);
+
+    readConfig();
+
+    String ssid;
+    String passw;
+    String ip;
+    String mask;
+    String gate;
+    String apiKey;
+    String feedId;
+    String del;
+
+    char *pch;
+    byte s[HttpHeaderBak.length()];
+    HttpHeaderBak.getBytes(s, HttpHeaderBak.length());
+    Serial.println(HttpHeaderBak);
+    pch = strtok((char*)s,"?&=");
+    while (pch != NULL) {
+     Serial.println(pch);
+    if (startsWith("ssid",pch)) {
+      ssid=strchr(pch,'=')+1;
+    }
+    if (startsWith("passw",pch)) {
+      passw=strchr(pch,'=')+1;
+    }
+    if (startsWith("ip",pch)) {
+      ip=strchr(pch,'=')+1;
+    }
+    if (startsWith("mask",pch)) {
+      mask=strchr(pch,'=')+1;
+    }
+    if (startsWith("gateway",pch)) {
+      gate=strchr(pch,'=')+1;
+    }
+    if (startsWith("APIkey",pch)) {
+      apiKey=strchr(pch,'=')+1;
+    }
+    if (startsWith("FeedID",pch)) {
+      feedId=strchr(pch,'=')+1;
+    }
+    if (startsWith("delay",pch)) {
+      del=strchr(pch,'=')+1;
+    }
+    pch = strtok (NULL, "&");
+    }
+
+    int ip1=192;
+    int ip2=168;
+    int ip3=1;
+    int ip4=167;
+    
+    
+    IPAddress _ip(ip1, ip2, ip3, ip4);
+    IPAddress _gateway(192,168,1,1);
+    IPAddress _mask(255,255,255,0);
       
     WiFi.mode(WIFI_STA);
-    WiFi.config(ip, gateway, subnet);
-    WiFi.begin(ssid, password);
+    WiFi.config(_ip, _gateway, _mask);
+    
+    char _ssid[ssid.length()+1];
+    char _passw[passw.length()+1];
+    ssid.toCharArray(_ssid, ssid.length()+1);
+    passw.toCharArray(_passw, passw.length()+1); 
+    
+    Serial.println(_ssid);
+    Serial.println(_passw);
+
+    WiFi.begin(_ssid, _passw);
+
     Serial.println("");
     Serial.println("WiFi connected");  
     Serial.print("IP address: ");
@@ -117,10 +171,6 @@ void setup() {
     Serial.println(WiFi.macAddress());
     sensor.begin(SDA,SCL);
     serverA.on ( "/", handleRoot );
-    // server.on ( "/inline", []() {
-		// server.send ( 200, "text/plain", "this works as well" );
-      // } );
-    // server.onNotFound ( handleNotFound );
   	serverA.begin();
     Serial.println ( "HTTP server started" );
   }
@@ -146,20 +196,7 @@ void loop() {
                HttpHeader=HttpHeaderBak;
                HttpHeaderBak="";
              }
-             // show the string on the monitor
-             Serial.print("HttpHeader:");
-             Serial.println(HttpHeader);
              
-            // open file for writing
-            File f = SPIFFS.open("/config.txt", "w");
-            if (!f) {
-                Serial.println("file open failed");
-            }
-            Serial.println("====== Writing to SPIFFS file =========");
-            // write 10 strings to file
-            f.println(HttpHeader);
-            f.close();
-
              String ssid;
              String passw;
              String ip;
@@ -167,61 +204,39 @@ void loop() {
              String gate;
              String apiKey;
              String feedId;
-             String delay;
+             String del;
              
              char *pch;
-             byte typ=0;
              byte s[HttpHeader.length()];
              HttpHeader.getBytes(s, HttpHeader.length());
              pch = strtok((char*)s,"?&=");
              while (pch != NULL) {
                Serial.println(pch);
-               if (startsWith("ssid",pch)) {
-                 typ=1;
-               } else if (startsWith("passw",pch)) {
-                 typ=2;
-               } else if (startsWith("ip",pch)) {
-                 typ=3;
-               } else if (startsWith("mask",pch)) {
-                 typ=4;
-               } else if (startsWith("gate",pch)) {
-                 typ=5;
-               } else if (startsWith("APIiKey",pch)) {
-                 typ=6;
-               } else if (startsWith("FeedId",pch)) {
-                 typ=7;
-               } else if (startsWith("delay",pch)) {
-                 typ=8;
-               } else if (startsWith("ulozit",pch)) {
-                 typ=9;
-               } else if (startsWith("reset",pch)) {
-                 typ=10;
-               }
-
-               pch = strtok (NULL, "?&=");
-               if (typ==1) {
-                 ssid=pch;
-               } else if (typ==2) {
-                 passw=pch;
-               } else if (typ==3) {
-                 ip=pch;
-               } else if (typ==4) {
-                 mask=pch;
-               } else if (typ==5) {
-                 gate=pch;
-               } else if (typ==6) {
-                 apiKey=pch;
-               } else if (typ==7) {
-                 feedId=pch;
-               } else if (typ==8) {
-                 delay=pch;
-               } else if (typ==9) {
-                 
-               } else if (typ==10) {
-                 // //reset 
-                 // Serial.println("ESP RESTART NOW");
-                 // ESP.restart();
-               }
+              if (startsWith("ssid",pch)) {
+                ssid=strchr(pch,'=')+1;
+              }
+              if (startsWith("passw",pch)) {
+                passw=strchr(pch,'=')+1;
+              }
+              if (startsWith("ip",pch)) {
+                ip=strchr(pch,'=')+1;
+              }
+              if (startsWith("mask",pch)) {
+                mask=strchr(pch,'=')+1;
+              }
+              if (startsWith("gateway",pch)) {
+                gate=strchr(pch,'=')+1;
+              }
+              if (startsWith("APIkey",pch)) {
+                apiKey=strchr(pch,'=')+1;
+              }
+              if (startsWith("FeedID",pch)) {
+                feedId=strchr(pch,'=')+1;
+              }
+              if (startsWith("delay",pch)) {
+                del=strchr(pch,'=')+1;
+              }
+              pch = strtok (NULL, "&");
              }
 
              
@@ -240,12 +255,25 @@ void loop() {
              client.print("<tr><td style='text-align:right;'>Gateway:</td><td><input type='text' name='gateway' maxlength='15' value='" + gate + "'/></td></tr>");
              client.print("<tr><td style='text-align:right;'>Xively API key:</td><td><input type='text' name='APIkey' value='" + apiKey + "'/></td></tr>");
              client.print("<tr><td style='text-align:right;'>Feed ID:</td><td><input type='text' name='FeedID' value='" + feedId + "'/></td></tr>");
-             client.print("<tr><td style='text-align:right;'>Prodleva mezi měřeními [s]:</td><td><input type='text' name='delay' maxlength='5' value='" + delay + "'/></td></tr>");
+             client.print("<tr><td style='text-align:right;'>Prodleva mezi měřeními [s]:</td><td><input type='text' name='delay' maxlength='5' value='" + del + "'/></td></tr>");
              client.print("<tr><td style='text-align:right'><input type=submit name=ulozit value='Uložit'></td>");
              // client.print("<td style='text-align:right'><input type=submit name=reset value='Reset'></td></tr>");
              client.print("</table></form>");
              client.print("</body></html>");
 
+             if (HttpHeader.indexOf('?') > 0) {
+              // open file for writing
+              File f = SPIFFS.open("/config.txt", "w");
+              if (!f) {
+                  Serial.println("file open failed");
+              }
+              Serial.println("====== Writing to SPIFFS file =========");
+              Serial.print("HttpHeader:");
+              Serial.println(HttpHeader);
+              // write 10 strings to file
+              f.println(HttpHeader);
+              f.close();
+             }
              //clearing string for next read
              HttpHeader="";
              //stopping client
@@ -276,4 +304,18 @@ bool startsWith(const char *pre, const char *str) {
     size_t lenpre = strlen(pre),
            lenstr = strlen(str);
     return lenstr < lenpre ? false : strncmp(pre, str, lenpre) == 0;
+}
+
+
+void readConfig() {
+  SPIFFS.begin();
+  // open file for reading
+  File f = SPIFFS.open("/config.txt", "r");
+  if (!f) {
+    Serial.println("file open failed");
+  } else {
+    Serial.println("====== Reading from SPIFFS file =======");
+    HttpHeaderBak=f.readStringUntil('\n');
+    Serial.println(HttpHeaderBak);
+  }
 }
