@@ -1,10 +1,21 @@
+unsigned long start=millis();
+
 #include <ESP8266WiFi.h>
 #include <SI7021.h>
+#include <Xively.h>
+#include <WiFiClient.h> 
+#include <FS.h>
 
 SI7021 sensor;
 
-#define TEMPERATURE_DIVIDOR 100.0
+#define TEMPERATURE_DIVIDOR 100
 #define MILIVOLT_TO_VOLT 1000.0
+#define SLEEP_DELAY_IN_SECONDS 60 
+#define ONECYCLE_IN_MS 1000 
+#define TIMEOUTFORWIFI_IN_MS 10000 
+#define MICROSECOND 1000000
+#define PORTSPEED 115200
+#define MILLIS_TO_SEC 1000.0
 
 #define SDA 12 // D6 - GPI12 on ESP-201 module
 #define SCL 14 // D5 - GPI14 on ESP-201 module
@@ -12,14 +23,13 @@ SI7021 sensor;
 #include <ESP8266WebServer.h>
 ESP8266WebServer serverA(80);
 
-// #include <WiFiClient.h> 
-// #include <FS.h>
 
 #define MaxHeaderLength 1600
-//byte mode=1; //flash
-//byte mode=2; //setup
-byte mode=3; //test
-//byte mode=4; //mereni
+byte mode=0;
+//byte mode=1;  //flash
+//byte mode=2;  //setup   D1=0 D2=0
+//byte mode=3;  //test    D1=1 D2=0
+//byte mode=4;  //mereni  D1=1 D2=1
 
 #include "FS.h"
 
@@ -36,32 +46,68 @@ volatile float humidity;
 
 WiFiServer server(80);
 
+
+char HumidityID[]         = "Humidity";
+char TemperatureID[]      = "Temperature";
+char VoltageID[]          = "Voltage";
+char BootTimeID[]         = "BootTime";
+
+XivelyDatastream datastreamsHumidity[] = {
+  XivelyDatastream(HumidityID,        strlen(HumidityID),       DATASTREAM_FLOAT),
+  XivelyDatastream(TemperatureID,     strlen(TemperatureID),    DATASTREAM_FLOAT),
+  XivelyDatastream(VoltageID,         strlen(VoltageID),        DATASTREAM_FLOAT),
+  XivelyDatastream(BootTimeID,        strlen(BootTimeID),       DATASTREAM_FLOAT)
+};
+char xivelyKey[]                = "RTlChENFnP19hPBWvdxb2uaPNaOGKzp8T4BiG5iUw7HDaIQX";
+#define xivelyFeedHumidity         273699700
+XivelyFeed feedHumidity(xivelyFeedHumidity,         datastreamsHumidity,       4);
+WiFiClient clientXively;
+XivelyClient xivelyClientHumidity(clientXively);
+
+
 void handleRoot() {
 	char temp[400];
 
 	snprintf ( temp, 400,
-
-"<html>\
-  <head>\
-    <meta http-equiv='refresh' content='5'/>\
-    <title>Vlhkomer</title>\
-    <style>\
-      body { background-color: #cccccc; font-family: Arial, Helvetica, Sans-Serif; Color: #000088; }\
-    </style>\
-  </head>\
-  <body>\
-    <h1>Vlhkomer</h1>\
-    <p>Teplota: %05d Vlhkost: %05d</p>\
-  </body>\
-</html>",
-
-		(int)(temperature/TEMPERATURE_DIVIDOR), (int)humidity
+      "<html>\
+        <head>\
+          <meta http-equiv='refresh' content='5'/>\
+          <meta charset='UTF-8'>\
+          <title>Vlhkomer</title>\
+          <style>\
+            body { background-color: #cccccc; font-family: Arial, Helvetica, Sans-Serif; Color: #000088; }\
+          </style>\
+        </head>\
+        <body>\
+          <h1>Vlhkoměr</h1>\
+          <p>Teplota: %3d.%2d °C Vlhkost: %5d %Rh</p>\
+        </body>\
+      </html>",
+		(int)(temperature/TEMPERATURE_DIVIDOR), ((int)temperature)%TEMPERATURE_DIVIDOR, (int)humidity
 	);
 	serverA.send ( 200, "text/html", temp );
 }
 
 void setup() {
   Serial.begin(115200);
+  Serial.println();
+  Serial.println("Vlhkoměr");
+  //mode
+  pinMode(5, INPUT);
+  pinMode(4, INPUT);
+  int d1 = digitalRead(5);
+  int d2 = digitalRead(4);
+  
+  if (d1==0 && d2==0) {
+    mode=2;
+  } else if (d1==1 && d2==0) {
+    mode = 3;
+  } else if (d1==1 && d2==1) {
+    mode = 4;
+  }
+  Serial.print("Mode:");
+  Serial.println(mode);
+  
   if (mode==2) {
     delay(1000);
     ssid = "ESPHum";
@@ -89,7 +135,7 @@ void setup() {
 
     readConfig();
     
-  } else if (mode==3) {
+  } else if (mode==3 || mode==4) {
 
     readConfig();
 
@@ -139,11 +185,11 @@ void setup() {
     int ip1=192;
     int ip2=168;
     int ip3=1;
-    int ip4=167;
+    int ip4=166;
     
     
     IPAddress _ip(ip1, ip2, ip3, ip4);
-    IPAddress _gateway(192,168,1,1);
+    IPAddress _gateway(192,168,1,2);
     IPAddress _mask(255,255,255,0);
       
     WiFi.mode(WIFI_STA);
@@ -242,7 +288,7 @@ void loop() {
              
              client.println("HTTP/1.1 200 OK");
              client.println("Content-Type: text/html");
-             client.println("<html><head><meta charset='Windows-1250' /></head><body>");
+             client.println("<html><head><meta charset='UTF-8' /></head><body>");
              client.println();
              client.print("<form method=get>");
              client.print("<span style='font-weight:bold; font-size:20pt;'>Vlhkoměr</span><span style='font-style:italic;'>Verze FW: 1.0.1</span><br/><br/>");
@@ -282,7 +328,7 @@ void loop() {
         }
       }
     }
-  } else if (mode==3) {
+  } else if (mode==3 || mode==4) {
     temperature=sensor.getCelsiusHundredths();
     humidity=sensor.getHumidityPercent();
     Serial.print("Temperature:");
@@ -295,8 +341,31 @@ void loop() {
     Serial.print("Voltage:");
     Serial.print(voltage);
     Serial.println("V");
-    serverA.handleClient();
-    delay(1000);
+    if (mode==3) {
+      serverA.handleClient();
+    }
+    if (!clientXively.connected()) {
+      datastreamsHumidity[0].setFloat(humidity);
+      datastreamsHumidity[1].setFloat(temperature/TEMPERATURE_DIVIDOR);
+      datastreamsHumidity[2].setFloat(voltage);
+      //datastreamsHumidity[3].setFloat((float)(millis() - boottime)/millis_to_sec);
+      Serial.println(F("uploading data to xively"));
+      int ret = xivelyClientHumidity.put(feedHumidity, xivelyKey);
+      
+      Serial.print(F("xivelyClientHumidity.put returned "));
+      Serial.println(ret);
+    }
+    if (mode==4) {
+      Serial.print("Start duration:");
+      Serial.print(millis()-start);
+      Serial.println(" ms.");
+      Serial.println("Entering deep sleep mode.");
+      Serial.print("Wake in ");
+      Serial.print(SLEEP_DELAY_IN_SECONDS);
+      Serial.println(" s.");
+      ESP.deepSleep(SLEEP_DELAY_IN_SECONDS * MICROSECOND, WAKE_RF_DEFAULT);
+    }
+//    delay(5000);
   }
 }
 
