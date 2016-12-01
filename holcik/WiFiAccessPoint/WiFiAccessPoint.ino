@@ -6,6 +6,8 @@ unsigned long start=millis();
 #include <WiFiClient.h> 
 #include <FS.h>
 
+ADC_MODE(ADC_VCC);
+
 SI7021 sensor;
 
 #define TEMPERATURE_DIVIDOR 100
