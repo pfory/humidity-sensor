@@ -184,19 +184,23 @@ void setup() {
     pch = strtok (NULL, "&");
     }
 
-    String ip1 = getValue(ip, '.', 0);
-    String ip2 = getValue(ip, '.', 1);
-    String ip3 = getValue(ip, '.', 2);
-    String ip4 = getValue(ip, '.', 3);
-    // int ip1=192;
-    // int ip2=168;
-    // int ip3=1;
-    // int ip4=166;
-    
-    
+    int ip1 = (getValue(ip, '.', 0)).toInt();
+    int ip2 = (getValue(ip, '.', 1)).toInt();
+    int ip3 = (getValue(ip, '.', 2)).toInt();
+    int ip4 = (getValue(ip, '.', 3)).toInt();
     IPAddress _ip(ip1, ip2, ip3, ip4);
-    IPAddress _gateway(192,168,1,2);
-    IPAddress _mask(255,255,255,0);
+
+    ip1 = (getValue(gate '.', 0)).toInt();
+    ip2 = (getValue(gate, '.', 1)).toInt();
+    ip3 = (getValue(gate, '.', 2)).toInt();
+    ip4 = (getValue(gate, '.', 3)).toInt();
+    IPAddress _gateway(ip1, ip2, ip3, ip4);
+
+    ip1 = (getValue(mask '.', 0)).toInt();
+    ip2 = (getValue(mask, '.', 1)).toInt();
+    ip3 = (getValue(mask, '.', 2)).toInt();
+    ip4 = (getValue(mask, '.', 3)).toInt();
+    IPAddress _mask(ip1, ip2, ip3, ip4);
       
     WiFi.mode(WIFI_STA);
     WiFi.config(_ip, _gateway, _mask);
