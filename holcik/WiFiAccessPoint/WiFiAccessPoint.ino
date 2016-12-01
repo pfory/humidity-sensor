@@ -184,10 +184,14 @@ void setup() {
     pch = strtok (NULL, "&");
     }
 
-    int ip1=192;
-    int ip2=168;
-    int ip3=1;
-    int ip4=166;
+    String ip1 = getValue(ip, '.', 0);
+    String ip2 = getValue(ip, '.', 1);
+    String ip3 = getValue(ip, '.', 2);
+    String ip4 = getValue(ip, '.', 3);
+    // int ip1=192;
+    // int ip2=168;
+    // int ip3=1;
+    // int ip4=166;
     
     
     IPAddress _ip(ip1, ip2, ip3, ip4);
@@ -389,4 +393,21 @@ void readConfig() {
     HttpHeaderBak=f.readStringUntil('\n');
     Serial.println(HttpHeaderBak);
   }
+}
+
+
+String getValue(String data, char separator, int index) {
+  int found = 0;
+  int strIndex[] = {0, -1};
+  int maxIndex = data.length()-1;
+
+  for(int i=0; i<=maxIndex && found<=index; i++){
+    if(data.charAt(i)==separator || i==maxIndex){
+        found++;
+        strIndex[0] = strIndex[1]+1;
+        strIndex[1] = (i == maxIndex) ? i+1 : i;
+    }
+  }
+
+  return found>index ? data.substring(strIndex[0], strIndex[1]) : "";
 }
