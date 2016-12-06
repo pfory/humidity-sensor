@@ -12,7 +12,6 @@ SI7021 sensor;
 
 #define TEMPERATURE_DIVIDOR 100
 #define MILIVOLT_TO_VOLT 1000.0
-#define SLEEP_DELAY_IN_SECONDS 60 
 #define ONECYCLE_IN_MS 1000 
 #define TIMEOUTFORWIFI_IN_MS 10000 
 #define MICROSECOND 1000000
@@ -29,9 +28,11 @@ unsigned long const sendDelay = 60000;
 unsigned long lastSend = sendDelay;
 unsigned long const dispDelay = 5000;
 unsigned long lastDisp = dispDelay;
+String sleepDelayInSeconds = "60"; 
+
 
 #define MaxHeaderLength 1600
-byte mode=0;
+byte mode=1;
 //byte mode=1;  //flash
 //byte mode=2;  //setup   D1=0 D2=0
 //byte mode=3;  //test    D1=1 D2=0
@@ -64,11 +65,11 @@ XivelyDatastream datastreamsHumidity[] = {
   XivelyDatastream(VoltageID,         strlen(VoltageID),        DATASTREAM_FLOAT),
   XivelyDatastream(BootTimeID,        strlen(BootTimeID),       DATASTREAM_FLOAT)
 };
-char xivelyKey[]                = "RTlChENFnP19hPBWvdxb2uaPNaOGKzp8T4BiG5iUw7HDaIQX";
-#define xivelyFeedHumidity         273699700
+unsigned long xivelyFeedHumidity = 0;
 XivelyFeed feedHumidity(xivelyFeedHumidity,         datastreamsHumidity,       4);
 WiFiClient clientXively;
 XivelyClient xivelyClientHumidity(clientXively);
+char xivelyKey[50];
 
 
 void handleRoot() {
@@ -86,13 +87,19 @@ void handleRoot() {
         </head>\
         <body>\
           <h1>Vlhkoměr</h1>\
-          <p>Teplota: %3d,%02d °C Vlhkost: %5d \%Rh Napětí: %2d,%02d V</p>\
+          <p>FeedID: %20d<p>\
+          <p>Teplota: %3d,%02d °C Vlhkost: %3d \%Rh Napětí: %2d,%02d V</p>\
         </body>\
       </html>",
-		(int)(temperature/TEMPERATURE_DIVIDOR), ((int)temperature)%TEMPERATURE_DIVIDOR, (int)humidity, (int)voltage, ((int)(voltage*100.0))%100
+      feedHumidity._id, 
+		 (int)(temperature/TEMPERATURE_DIVIDOR), ((int)temperature)%TEMPERATURE_DIVIDOR, (int)humidity, (int)voltage, ((int)(voltage*100.0))%100
 	);
 	serverA.send ( 200, "text/html", temp );
 }
+
+void readConfig(void);
+bool startsWith(const char *, const char *);
+String getValue(String, char, int);
 
 void setup() {
   Serial.begin(115200);
@@ -114,7 +121,7 @@ void setup() {
   Serial.print("Mode:");
   Serial.println(mode);
   
-  if (mode==2) {
+  if (mode==2) { //setup
     delay(1000);
     ssid = "ESPHum";
     password = "hum007";
@@ -141,7 +148,7 @@ void setup() {
 
     readConfig();
     
-  } else if (mode==3 || mode==4) {
+  } else if (mode==3 || mode==4) { //test a mereni
 
     readConfig();
 
@@ -150,9 +157,8 @@ void setup() {
     String ip;
     String mask;
     String gate;
-    String apiKey;
+    //String apiKey;
     String feedId;
-    String del;
 
     char *pch;
     byte s[HttpHeaderBak.length()];
@@ -177,13 +183,15 @@ void setup() {
       gate=strchr(pch,'=')+1;
     }
     if (startsWith("APIkey",pch)) {
-      apiKey=strchr(pch,'=')+1;
+      memcpy(xivelyKey, strchr(pch,'=')+1, strlen(strchr(pch,'=')+1)+1);
+      //xivelyKey=strchr(pch,'=')+1;
+      //apiKey=
     }
     if (startsWith("FeedID",pch)) {
       feedId=strchr(pch,'=')+1;
     }
     if (startsWith("delay",pch)) {
-      del=strchr(pch,'=')+1;
+      sleepDelayInSeconds=strchr(pch,'=')+1;
     }
     pch = strtok (NULL, "&");
     }
@@ -219,6 +227,38 @@ void setup() {
 
     WiFi.begin(_ssid, _passw);
 
+    byte cyklu=0;  
+    while (WiFi.status() != WL_CONNECTED) {
+      cyklu++;
+      delay(ONECYCLE_IN_MS);
+      Serial.print(".");
+      if (cyklu*ONECYCLE_IN_MS>TIMEOUTFORWIFI_IN_MS) {
+        Serial.println();
+        if (mode==3) {
+          Serial.print("Wifi unavailable, restart.");
+          ESP.restart();
+        } else {
+          Serial.print("Wifi unavailable, go to deepsleep for 5 minutes");
+          ESP.deepSleep(300 * MICROSECOND, WAKE_RF_DEFAULT);
+        }
+      }
+    }
+    
+    if (mode==4) {
+      while (WiFi.status() != WL_CONNECTED) {
+        cyklu++;
+        delay(ONECYCLE_IN_MS);
+        Serial.print(".");
+        if (cyklu*ONECYCLE_IN_MS>TIMEOUTFORWIFI_IN_MS) {
+          Serial.println();
+          Serial.print("Wifi unavailable, go to deepsleep for 5 minutes");
+          ESP.deepSleep(300 * MICROSECOND, WAKE_RF_DEFAULT);
+        }
+      }
+    }
+
+    feedHumidity._id = feedId.toInt();
+    
     Serial.println("");
     Serial.println("WiFi connected");  
     Serial.print("IP address: ");
@@ -229,6 +269,15 @@ void setup() {
     Serial.println(WiFi.subnetMask());
     Serial.print("MAC: ");
     Serial.println(WiFi.macAddress());
+    Serial.print("Interval: ");
+    Serial.print(sleepDelayInSeconds);
+    Serial.println(" seconds");
+    Serial.print("Feed ID:");
+    Serial.println(feedId.toInt());
+    Serial.print("APIkey:");
+    Serial.println(xivelyKey);
+
+
     sensor.begin(SDA,SCL);
     serverA.on ( "/", handleRoot );
   	serverA.begin();
@@ -369,22 +418,25 @@ void loop() {
         datastreamsHumidity[1].setFloat(temperature/TEMPERATURE_DIVIDOR);
         datastreamsHumidity[2].setFloat(voltage);
         //datastreamsHumidity[3].setFloat((float)(millis() - boottime)/millis_to_sec);
-        Serial.println(F("uploading data to xively"));
+        Serial.print("uploading data to xively, Feed:");
+        Serial.print(feedHumidity._id);
+        Serial.print(" xivelyKey:");
+        Serial.println(xivelyKey);
         int ret = xivelyClientHumidity.put(feedHumidity, xivelyKey);
         
         Serial.print(F("xivelyClientHumidity.put returned "));
         Serial.println(ret);
       }
     }
-    if (mode==4) {
+    if (mode==4) { //mererni
       Serial.print("Start duration:");
       Serial.print(millis()-start);
       Serial.println(" ms.");
       Serial.println("Entering deep sleep mode.");
       Serial.print("Wake in ");
-      Serial.print(SLEEP_DELAY_IN_SECONDS);
+      Serial.print(sleepDelayInSeconds);
       Serial.println(" s.");
-      ESP.deepSleep(SLEEP_DELAY_IN_SECONDS * MICROSECOND, WAKE_RF_DEFAULT);
+      ESP.deepSleep(sleepDelayInSeconds.toInt() * MICROSECOND, WAKE_RF_DEFAULT);
     }
   }
 }
