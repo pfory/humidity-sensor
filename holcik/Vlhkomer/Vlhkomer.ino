@@ -29,10 +29,18 @@ unsigned long lastSend = sendDelay;
 unsigned long const dispDelay = 5000;
 unsigned long lastDisp = dispDelay;
 String sleepDelayInSeconds = "60"; 
+String ssid;
+String passw;
+String ip;
+String mask;
+String gate;
+String feedId;
 
 
 #define MaxHeaderLength 1600
 byte mode=1;
+//D1 - prepinac 1 na GPIO5
+//D2 - prepinac 2 na GPIO4
 //byte mode=1;  //flash
 //byte mode=2;  //setup   D1=0 D2=0
 //byte mode=3;  //test    D1=1 D2=0
@@ -40,9 +48,6 @@ byte mode=1;
 
 #include "FS.h"
 
-/* Set these to your desired credentials. */
-const char *ssid;
-const char *password;
 
 String HttpHeader = String(MaxHeaderLength);
 String HttpHeaderBak = String(MaxHeaderLength);
@@ -97,12 +102,12 @@ void handleRoot() {
 	serverA.send ( 200, "text/html", temp );
 }
 
-void readConfig(void);
+int readConfig(void);
 bool startsWith(const char *, const char *);
 String getValue(String, char, int);
 
 void setup() {
-  Serial.begin(115200);
+  Serial.begin(PORTSPEED);
   Serial.println();
   Serial.println("Vlhkoměr");
   //mode
@@ -120,13 +125,16 @@ void setup() {
   }
   Serial.print("Mode:");
   Serial.println(mode);
-  
+
   if (mode==2) { //setup
     delay(1000);
+    /* Set these to your desired credentials. */
+    const char *ssid;
+    const char *password;
+
     ssid = "ESPHum";
     password = "hum007";
 
-    //SPIFFS.begin();
     Serial.println();
     Serial.print("Configuring access point...");
     /* You can remove the password parameter if you want the AP to be open. */
@@ -139,27 +147,20 @@ void setup() {
     Serial.println(ssid);
     Serial.print("Password: ");
     Serial.println(password);
-    //server.on("/", handleRoot);
     server.begin();
     Serial.println("HTTP server started");
     HttpHeader = "";
-
-    SPIFFS.begin();
-
+    
     readConfig();
     
   } else if (mode==3 || mode==4) { //test a mereni
-
-    readConfig();
-
-    String ssid;
-    String passw;
-    String ip;
-    String mask;
-    String gate;
-    //String apiKey;
-    String feedId;
-
+    if (readConfig()>0) {
+      Serial.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+      Serial.println("!!!! Zařízení není nakonfigurované, končím !!!!!");
+      Serial.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+      return;
+    }
+  
     char *pch;
     byte s[HttpHeaderBak.length()];
     HttpHeaderBak.getBytes(s, HttpHeaderBak.length());
@@ -184,8 +185,6 @@ void setup() {
     }
     if (startsWith("APIkey",pch)) {
       memcpy(xivelyKey, strchr(pch,'=')+1, strlen(strchr(pch,'=')+1)+1);
-      //xivelyKey=strchr(pch,'=')+1;
-      //apiKey=
     }
     if (startsWith("FeedID",pch)) {
       feedId=strchr(pch,'=')+1;
@@ -196,24 +195,10 @@ void setup() {
     pch = strtok (NULL, "&");
     }
 
-    int ip1 = (getValue(ip, '.', 0)).toInt();
-    int ip2 = (getValue(ip, '.', 1)).toInt();
-    int ip3 = (getValue(ip, '.', 2)).toInt();
-    int ip4 = (getValue(ip, '.', 3)).toInt();
-    IPAddress _ip(ip1, ip2, ip3, ip4);
-
-    ip1 = (getValue(gate, '.', 0)).toInt();
-    ip2 = (getValue(gate, '.', 1)).toInt();
-    ip3 = (getValue(gate, '.', 2)).toInt();
-    ip4 = (getValue(gate, '.', 3)).toInt();
-    IPAddress _gateway(ip1, ip2, ip3, ip4);
-
-    ip1 = (getValue(mask, '.', 0)).toInt();
-    ip2 = (getValue(mask, '.', 1)).toInt();
-    ip3 = (getValue(mask, '.', 2)).toInt();
-    ip4 = (getValue(mask, '.', 3)).toInt();
-    IPAddress _mask(ip1, ip2, ip3, ip4);
-      
+    IPAddress _ip(getValue(ip, '.', 0).toInt(), getValue(ip, '.', 1).toInt(), getValue(ip, '.', 2).toInt(), getValue(ip, '.', 3).toInt());
+    IPAddress _gateway(getValue(gate, '.', 0).toInt(), getValue(gate, '.', 1).toInt(), getValue(gate, '.', 2).toInt(), getValue(gate, '.', 3).toInt());
+    IPAddress _mask(getValue(mask, '.', 0).toInt(), getValue(mask, '.', 1).toInt(), getValue(mask, '.', 2).toInt(), getValue(mask, '.', 3).toInt());
+     
     WiFi.mode(WIFI_STA);
     WiFi.config(_ip, _gateway, _mask);
     
@@ -306,14 +291,7 @@ void loop() {
                HttpHeaderBak="";
              }
              
-             String ssid;
-             String passw;
-             String ip;
-             String mask;
-             String gate;
-             String apiKey;
-             String feedId;
-             String del;
+             String key;
              
              char *pch;
              byte s[HttpHeader.length()];
@@ -337,13 +315,13 @@ void loop() {
                 gate=strchr(pch,'=')+1;
               }
               if (startsWith("APIkey",pch)) {
-                apiKey=strchr(pch,'=')+1;
+                key=strchr(pch,'=')+1;
               }
               if (startsWith("FeedID",pch)) {
                 feedId=strchr(pch,'=')+1;
               }
               if (startsWith("delay",pch)) {
-                del=strchr(pch,'=')+1;
+                sleepDelayInSeconds=strchr(pch,'=')+1;
               }
               pch = strtok (NULL, "&");
              }
@@ -362,9 +340,9 @@ void loop() {
              client.print("<tr><td style='text-align:right;'>IP:</td><td><input type='text' name='ip' maxlength='15' value='" + ip + "'/></td></tr>");
              client.print("<tr><td style='text-align:right;'>Maska:</td><td><input type='text' name='mask' maxlength='15' value='" + mask + "'/></td></tr>");
              client.print("<tr><td style='text-align:right;'>Gateway:</td><td><input type='text' name='gateway' maxlength='15' value='" + gate + "'/></td></tr>");
-             client.print("<tr><td style='text-align:right;'>Xively API key:</td><td><input type='text' name='APIkey' value='" + apiKey + "'/></td></tr>");
+             client.print("<tr><td style='text-align:right;'>Xively API key:</td><td><input type='text' name='APIkey' value='" + key + "'/></td></tr>");
              client.print("<tr><td style='text-align:right;'>Feed ID:</td><td><input type='text' name='FeedID' value='" + feedId + "'/></td></tr>");
-             client.print("<tr><td style='text-align:right;'>Prodleva mezi měřeními [s]:</td><td><input type='text' name='delay' maxlength='5' value='" + del + "'/></td></tr>");
+             client.print("<tr><td style='text-align:right;'>Prodleva mezi měřeními [s]:</td><td><input type='text' name='delay' maxlength='5' value='" + sleepDelayInSeconds + "'/></td></tr>");
              client.print("<tr><td style='text-align:right'><input type=submit name=ulozit value='Uložit'></td>");
              // client.print("<td style='text-align:right'><input type=submit name=reset value='Reset'></td></tr>");
              client.print("</table></form>");
@@ -448,17 +426,19 @@ bool startsWith(const char *pre, const char *str) {
 }
 
 
-void readConfig() {
+int readConfig() {
   SPIFFS.begin();
   // open file for reading
   File f = SPIFFS.open("/config.txt", "r");
   if (!f) {
     Serial.println("file open failed");
+    return 1;
   } else {
     Serial.println("====== Reading from SPIFFS file =======");
     HttpHeaderBak=f.readStringUntil('\n');
     Serial.println(HttpHeaderBak);
   }
+  return 0;
 }
 
 
