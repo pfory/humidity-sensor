@@ -15,7 +15,7 @@ Zaøízení se mùže nacházet ve ètyøech režimech podle nastavení pøepínaèù 1,2 a 3.
 flash       | x         x           OFF
 nastavení   | ON        ON          x
 test mìøení | OFF       ON          x
-mìøení      | ON        ON          ON
+mìøení      | OFF       OFF         ON
 
 
 1. Flash FW
@@ -76,11 +76,11 @@ Napìtí baterie V
 
 4.Mìøení
 --------
-Pøepínaè 1 je v poloze ON, pøepínaè 2 v poloze ON, pøepínaè 3 je v poloze ON.
+Pøepínaè 1 je v poloze ON, pøepínaè 2 v poloze OFF, pøepínaè 3 je v poloze OFF.
 ---------
 | O     |   Pøepínaè 3
-| O     |   Pøepínaè 1
-| O     |   Pøepínaè 2
+|     O |   Pøepínaè 1
+|     O |   Pøepínaè 2
 ---------
  ON  OFF
 

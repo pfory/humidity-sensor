@@ -91,7 +91,7 @@ void handleRoot() {
           </style>\
         </head>\
         <body>\
-          <h1>Vlhkoměr</h1>\
+          <span style='font-weight:bold; font-size:20pt;'>Vlhkoměr</span><span style='font-style:italic;'> Verze FW: 1.0.5</span><br/><br/>\
           <p>FeedID: %20d<p>\
           <p>Teplota: %3d,%02d °C Vlhkost: %3d \%Rh Napětí: %2d,%02d V</p>\
         </body>\
@@ -133,7 +133,7 @@ void setup() {
     const char *password;
 
     ssid = "ESPHum";
-    password = "hum007";
+    password = "humidity007";
 
     Serial.println();
     Serial.print("Configuring access point...");
@@ -327,12 +327,13 @@ void loop() {
              }
 
              
-             client.println("HTTP/1.1 200 OK");
-             client.println("Content-Type: text/html");
-             client.println("<html><head><meta charset='UTF-8' /></head><body>");
-             client.println();
-             client.print("<form method=get>");
-             client.print("<span style='font-weight:bold; font-size:20pt;'>Vlhkoměr</span><span style='font-style:italic;'>Verze FW: 1.0.1</span><br/><br/>");
+             // client.println("HTTP/1.1 200 OK");
+             // client.println("Content-Type: text/html");
+             // client.println("<html><head><meta charset='UTF-8'></head><body>");
+             // client.println();
+             client.print("<html><head><meta charset='UTF-8'></head><style> body { background-color: #cccccc; font-family: Arial, Helvetica, Sans-Serif; Color: #000088; }</style>");
+             client.print("<form>");
+             client.print("<span style='font-weight:bold; font-size:20pt;'>Vlhkoměr</span><span style='font-style:italic;'> Verze FW: 1.0.5</span><br/><br/>");
              client.print("<table><tr><td style='text-align:right;'>AP SSID:</td><td><input type='text' name=ssid value='");
              client.print(ssid);
              client.print("'/></td></tr>");
@@ -427,6 +428,7 @@ bool startsWith(const char *pre, const char *str) {
 
 
 int readConfig() {
+  Serial.println("Read config file.");
   SPIFFS.begin();
   // open file for reading
   File f = SPIFFS.open("/config.txt", "r");

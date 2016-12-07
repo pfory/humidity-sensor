@@ -1,15 +1,0 @@
-GET /?ssid=Datlovo&passw=Nu6kMABmseYwbCoJ7LyG&ip=192.168.1.144&mask=255.255.225.0&gateway=192.168.1.1&APIkey=RTlChENFnP19hPBWvdxb2uaPNaOGKzp8T4BiG5iUw7HDaIQX&FeedID=273699700&delay=3600&submit=Ulo%C5%BEit HTTP/1.1
-
-GET /
-ssid=Datlovo
-passw=Nu6kMABmseYwbCoJ7LyG
-ip=192.168.1.144
-mask=255.255.225.0
-gateway=192.168.1.1
-APIkey=RTlChENFnP19hPBWvdxb2uaPNaOGKzp8T4BiG5iUw7HDaIQX
-FeedID=273699700
-delay=3600
-submit=Ulo%C5%BEit HTTP/1.1
-GET /favicon.ico HTTP/1.1
-
-GET /favicon.ico HTTP/1.1
