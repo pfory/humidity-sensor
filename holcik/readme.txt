@@ -1,27 +1,48 @@
-Pøepínaè 1 - režim nastavení - ON/mìøení - OFF
-Pøepínaè 2 - režim spánku ON/OFF
-Pøepínaè 3 - flash firmware ON/OFF
+Pøepínaèe
+Pohled ze strany souèástek 
+---------
+| O     |   Pøepínaè 3
+| O     |   Pøepínaè 1
+| O     |   Pøepínaè 2
+---------
+ ON  OFF
+ x - libovolná poloha pøepínaèe
+ 
 
 Zaøízení se mùže nacházet ve ètyøech režimech podle nastavení pøepínaèù 1,2 a 3.
-            | 1 (režim) 2 (spánek)  3 (flash)
+            | 1         2           3
 ------------|------------------------------            
 flash       | x         x           OFF
-nastavení   | ON        OFF         ON
-test mìøení | OFF       OFF         ON
-mìøení      | OFF       ON          ON
+nastavení   | ON        ON          x
+test mìøení | OFF       ON          x
+mìøení      | ON        ON          ON
 
 
 1. Flash FW
 -----------
-Pøepínaè 1 (režim) je v libovolné poloze, pøepínaè 2 (spánek) je v libovolné poloze, pøepínaè 3 (flash) je v poloze OFF.
+Pøepínaè 1 je v libovolné poloze, pøepínaè 2 je v libovolné poloze, pøepínaè 3 je v poloze OFF.
+
+---------
+|     O |   Pøepínaè 3
+| x   x |   Pøepínaè 1
+| x   x |   Pøepínaè 2
+---------
+ ON  OFF
+
 Zaøízení musí být pøipojené k napájení, napájení z USB je kvùli spotøebì v režimu spánku vyøazené natrvalo z èinnosti.
 
 2.Nastavení
 -----------
-Pøepínaè 1 (režim) je v poloze ON (nastavení), pøepínaè 2 (spánek) je v poloze OFF, pøepínaè 3 (flash) je v poloze ON
+Pøepínaè 1 je v poloze ON, pøepínaè 2 je v poloze ON, pøepínaè 3 je v libovolné poloze.
+
+---------
+| x   x |   Pøepínaè 3
+| O     |   Pøepínaè 1
+| O     |   Pøepínaè 2
+---------
+ ON  OFF
 
 Zaøízení se pøepne do režimu AP (pøístupový bod). V seznamu Wifi sítí na PC se zobrazí nový pøístupový bod s názvem XXXXX. 
-K tomuto pøístupovému bodu se pøíhlásíme heslem XXXXX.
 Po zadaní adresy 192.168.4.1 v prohlížeèi se zobrazí formuláø pro nastavení sítì:
 AP SSID - identifikaèní znak sítì ke které se bude zaøízení pøipojovat.
 AP PASSWORD - heslo k síti
@@ -37,12 +58,16 @@ Nastavení se uloží a zaøízení se restartuje. Zaøízení je dále v režimu STA (stan
 
 3.Test Mìøení
 -------------
-Pøepínaè 1 (režim) je v poloze OFF (mìøení), pøepínaè 2 (spánek) je v poloze OFF, pøepínaè 3 (flash) je v poloze ON
+Pøepínaè 1 je v poloze OFF, pøepínaè 2 je v poloze ON, pøepínaè 3 je v libovolné poloze.
+---------
+| x   x |   Pøepínaè 3
+|     O |   Pøepínaè 1
+| O     |   Pøepínaè 2
+---------
+ ON  OFF
 
-Po zadání adresy IP zaøízení (nastavené v bodì 1.Nastavení) do prohlížeèe se zobrazí formuláø jako v pøípadì nastavení 
-a je možno mìnit parametry sítì, xively pøístupu a prodlevy jako v pøípadì nastavení.
-V pøípadì provedení zmìn je nutné údaje uložit. 
-Dále se ve formuláøi zobrazují namìøené údaje. Perioda mìøení je v tomto pøípadì 10s.
+Po zadání adresy IP zaøízení (nastavené v bodì 1.Nastavení) do prohlížeèe se zobrazí formuláø ve kterám se zobrazují namìøené údaje. 
+Perioda mìøení je v tomto pøípadì 10s.
 
 Namìøené údaje:
 Teplota °C
@@ -51,7 +76,13 @@ Napìtí baterie V
 
 4.Mìøení
 --------
-Pøepínaè 1 (režim) je v poloze OFF (mìøení), pøepínaè 2 (spánek) v poloze ON, pøepínaè 3 (flash) je v poloze ON
+Pøepínaè 1 je v poloze ON, pøepínaè 2 v poloze ON, pøepínaè 3 je v poloze ON.
+---------
+| O     |   Pøepínaè 3
+| O     |   Pøepínaè 1
+| O     |   Pøepínaè 2
+---------
+ ON  OFF
 
 Zaøízení provede mìøení, výsledky odešle na Xively a upadne do režimu spánku s minimální spotøebou kolem 0,1mA. Po uplynutí nastavené prodlevy se celý cyklus opakuje.
 V tomto pøípadì není možné zobrazit webový formuláø v prohlížeèi.
