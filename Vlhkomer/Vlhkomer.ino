@@ -396,7 +396,7 @@ void loop() {
         datastreamsHumidity[0].setFloat(humidity);
         datastreamsHumidity[1].setFloat(temperature/TEMPERATURE_DIVIDOR);
         datastreamsHumidity[2].setFloat(voltage);
-        //datastreamsHumidity[3].setFloat((float)(millis() - boottime)/millis_to_sec);
+        datastreamsHumidity[3].setFloat((float)(millis() - start)/MILLIS_TO_SEC);
         Serial.print("uploading data to xively, Feed:");
         Serial.print(feedHumidity._id);
         Serial.print(" xivelyKey:");
