@@ -1,16 +1,21 @@
+Vlhkomìr
+--------
+Zaøízení slouí k mìøení vlhkosti a teploty a odesílání hodnot na server xively.com. K pøenosu vyuívá bezdrátové pøipojení napø. k domácí síti. 
+Konfigurace síovıch adres, xively klíèù a intervalu mìøení je uivatelsky nastavitelná.
+
 Pøepínaèe
 Pohled ze strany souèástek 
 ---------
 | O     |   Pøepínaè 3
-| O     |   Pøepínaè 1
 | O     |   Pøepínaè 2
+| O     |   Pøepínaè 1
 ---------
  ON  OFF
  x - libovolná poloha pøepínaèe
  
 
 Zaøízení se mùe nacházet ve ètyøech reimech podle nastavení pøepínaèù 1,2 a 3.
-            | 1         2           3
+            | 2         1           3
 ------------|------------------------------            
 flash       | x         x           OFF
 nastavení   | ON        ON          x
@@ -20,12 +25,12 @@ mìøení      | OFF       OFF         ON
 
 1. Flash FW
 -----------
-Pøepínaè 1 je v libovolné poloze, pøepínaè 2 je v libovolné poloze, pøepínaè 3 je v poloze OFF.
+Pøepínaè 1 je v libovolné poloze, Pøepínaè 2 je v libovolné poloze, Pøepínaè 3 je v poloze OFF.
 
 ---------
 |     O |   Pøepínaè 3
-| x   x |   Pøepínaè 1
 | x   x |   Pøepínaè 2
+| x   x |   Pøepínaè 1
 ---------
  ON  OFF
 
@@ -33,16 +38,16 @@ Zaøízení musí bıt pøipojené k napájení, napájení z USB je kvùli spotøebì v reim
 
 2.Nastavení
 -----------
-Pøepínaè 1 je v poloze ON, pøepínaè 2 je v poloze ON, pøepínaè 3 je v libovolné poloze.
+Pøepínaè 1 je v poloze ON, Pøepínaè 2 je v poloze ON, Pøepínaè 3 je v libovolné poloze.
 
 ---------
 | x   x |   Pøepínaè 3
-| O     |   Pøepínaè 1
 | O     |   Pøepínaè 2
+| O     |   Pøepínaè 1
 ---------
  ON  OFF
 
-Zaøízení se pøepne do reimu AP (pøístupovı bod). V seznamu Wifi sítí na PC se zobrazí novı pøístupovı bod s názvem XXXXX. 
+Zaøízení se pøepne do reimu AP (pøístupovı bod). V seznamu Wifi sítí na PC se zobrazí novı pøístupovı bod s názvem ESPHum, heslo pro pøipojení je "humidity007" bez uvozovek. 
 Po zadaní adresy 192.168.4.1 v prohlíeèi se zobrazí formuláø pro nastavení sítì:
 AP SSID - identifikaèní znak sítì ke které se bude zaøízení pøipojovat.
 AP PASSWORD - heslo k síti
@@ -53,16 +58,16 @@ Xively API key - klíè pro pøístup ke slubì Xively
 Xively feed ID - identifikace feedu
 Prodleva mezi mìøeními - prodleva v sekundách mezi jednotlivımi mìøeními. Doporuèuji nastavit více ne 300s kvùli vıdri baterií.
 
-Pøed uloením pøepnout pøepínaè 1 (reim) do polohy ON (mìøení).
+Pøed uloením pøepnout Pøepínaè 2 (reim) do polohy ON (mìøení).
 Nastavení se uloí a zaøízení se restartuje. Zaøízení je dále v reimu STA (stanice). 
 
 3.Test Mìøení
 -------------
-Pøepínaè 1 je v poloze OFF, pøepínaè 2 je v poloze ON, pøepínaè 3 je v libovolné poloze.
+Pøepínaè 1 je v poloze ON, Pøepínaè 2 je v poloze OFF, Pøepínaè 3 je v libovolné poloze.
 ---------
 | x   x |   Pøepínaè 3
-|     O |   Pøepínaè 1
-| O     |   Pøepínaè 2
+|     O |   Pøepínaè 2
+| O     |   Pøepínaè 1
 ---------
  ON  OFF
 
@@ -76,11 +81,11 @@ Napìtí baterie V
 
 4.Mìøení
 --------
-Pøepínaè 1 je v poloze ON, pøepínaè 2 v poloze OFF, pøepínaè 3 je v poloze OFF.
+Pøepínaè 1 je v poloze OFF, Pøepínaè 2 v poloze OFF, Pøepínaè 3 je v poloze OFF.
 ---------
 | O     |   Pøepínaè 3
-|     O |   Pøepínaè 1
 |     O |   Pøepínaè 2
+|     O |   Pøepínaè 1
 ---------
  ON  OFF
 
