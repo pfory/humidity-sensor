@@ -1,2 +1,3 @@
-print("Wait 5 seconds please")
-tmr.alarm(0, 5000, 0, function() dofile('wifi.lua') end)
+--print("Wait 5 seconds please")
+--tmr.alarm(0, 5000, 0, function() dofile('wifi.lua') end)
+dofile('wifi.lua')
