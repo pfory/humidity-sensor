@@ -26,8 +26,9 @@ then
 end
 
 Broker="178.77.238.20"  
+--Broker="192.168.1.56"  
 
-versionSW         = 0.1
+versionSW         = 0.2
 versionSWString   = "Humidity v" 
 print(versionSWString .. versionSW)
 
