@@ -49,13 +49,11 @@ Pøepínaè 1 je v poloze ON, Pøepínaè 2 je v poloze ON, Pøepínaè 3 je v libovolné 
 
 Zaøízení se pøepne do reimu AP (pøístupovı bod). V seznamu Wifi sítí na PC se zobrazí novı pøístupovı bod s názvem ESPHum, heslo pro pøipojení je "humidity007" bez uvozovek. 
 Po zadaní adresy 192.168.4.1 v prohlíeèi se zobrazí formuláø pro nastavení sítì:
-AP SSID - identifikaèní znak sítì ke které se bude zaøízení pøipojovat.
-AP PASSWORD - heslo k síti
-IP - adresa zaøízení napø. 192.168.1.200. Adresa musí bıt v rozsahu sítì, ke které se pøipojujeme.
+AP SSID - identifikaèní znak sítì ke které se bude zaøízení pøipojovat. Fusal2
+AP PASSWORD - heslo k síti 1860918609
+IP - adresa zaøízení napø. 192.168.1.200. Adresa musí bıt v rozsahu sítì, ke které se pøipojujeme. 192.168.0.93
 Maska - síová maska napø. 255.255.255.0
-Gateway - brána napø. 192.168.1.1, pøístupovı bod do internetu.
-Xively API key - klíè pro pøístup ke slubì Xively
-Xively feed ID - identifikace feedu
+Gateway - brána napø. 192.168.1.1, pøístupovı bod do internetu. 192.168.0.1
 Prodleva mezi mìøeními - prodleva v sekundách mezi jednotlivımi mìøeními. Doporuèuji nastavit více ne 300s kvùli vıdri baterií.
 
 Pøed uloením pøepnout Pøepínaè 2 (reim) do polohy ON (mìøení).

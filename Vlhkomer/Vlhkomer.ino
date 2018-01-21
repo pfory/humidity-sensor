@@ -2,9 +2,24 @@ unsigned long start=millis();
 
 #include <ESP8266WiFi.h>
 #include <SI7021.h>
-#include <Xively.h>
 #include <WiFiClient.h> 
 #include <FS.h>
+#include "Adafruit_MQTT.h"
+#include "Adafruit_MQTT_Client.h"
+
+#define verbose
+#ifdef verbose
+ #define DEBUG_PRINT(x)         Serial.print (x)
+ #define DEBUG_PRINTDEC(x)      Serial.print (x, DEC)
+ #define DEBUG_PRINTLN(x)       Serial.println (x)
+ #define DEBUG_PRINTF(x, y)     Serial.printf (x, y)
+ #define PORTSPEED 115200
+#else
+ #define DEBUG_PRINT(x)
+ #define DEBUG_PRINTDEC(x)
+ #define DEBUG_PRINTLN(x)
+ #define DEBUG_PRINTF(x, y)
+#endif 
 
 ADC_MODE(ADC_VCC);
 
@@ -34,8 +49,27 @@ String passw;
 String ip;
 String mask;
 String gate;
-String feedId;
 
+#define AIO_SERVER      "192.168.1.56"
+#define AIO_SERVERPORT  1883
+#define AIO_USERNAME    "datel"
+#define AIO_KEY         "hanka12"
+
+String brokerIP;
+String brokerPort;
+String brokerUser;
+String brokerPassword;
+
+WiFiClient client;
+
+#define MQTTBASE "/holcik/Vlhkomer4/"
+
+Adafruit_MQTT_Client mqtt(&client, AIO_SERVER, AIO_SERVERPORT, AIO_USERNAME, AIO_KEY);
+Adafruit_MQTT_Publish _temperature             = Adafruit_MQTT_Publish(&mqtt, MQTTBASE "Temperature");
+Adafruit_MQTT_Publish _humidity                = Adafruit_MQTT_Publish(&mqtt, MQTTBASE "Humidity");
+Adafruit_MQTT_Publish _bootTime                = Adafruit_MQTT_Publish(&mqtt, MQTTBASE "bootTime");
+Adafruit_MQTT_Publish _voltage                 = Adafruit_MQTT_Publish(&mqtt, MQTTBASE "Voltage");
+Adafruit_MQTT_Publish _versionSW               = Adafruit_MQTT_Publish(&mqtt, MQTTBASE "VersionSW");
 
 #define MaxHeaderLength 1600
 byte mode=1;
@@ -58,24 +92,8 @@ float voltage;
 
 WiFiServer server(80);
 
-
-char HumidityID[]         = "Humidity";
-char TemperatureID[]      = "Temperature";
-char VoltageID[]          = "Voltage";
-char BootTimeID[]         = "BootTime";
-
-XivelyDatastream datastreamsHumidity[] = {
-  XivelyDatastream(HumidityID,        strlen(HumidityID),       DATASTREAM_FLOAT),
-  XivelyDatastream(TemperatureID,     strlen(TemperatureID),    DATASTREAM_FLOAT),
-  XivelyDatastream(VoltageID,         strlen(VoltageID),        DATASTREAM_FLOAT),
-  XivelyDatastream(BootTimeID,        strlen(BootTimeID),       DATASTREAM_FLOAT)
-};
-unsigned long xivelyFeedHumidity = 0;
-XivelyFeed feedHumidity(xivelyFeedHumidity,         datastreamsHumidity,       4);
-WiFiClient clientXively;
-XivelyClient xivelyClientHumidity(clientXively);
-char xivelyKey[50];
-
+float versionSW=1.0;
+char versionSWString[] = "Vlhkoměr v"; //SW name & version
 
 void handleRoot() {
 	char temp[600];
@@ -91,12 +109,12 @@ void handleRoot() {
           </style>\
         </head>\
         <body>\
-          <span style='font-weight:bold; font-size:20pt;'>Vlhkoměr</span><span style='font-style:italic;'> Verze FW: 1.0.5</span><br/><br/>\
-          <p>FeedID: %20d<p>\
+          <span style='font-weight:bold; font-size:20pt;'>Vlhkoměr</span><span style='font-style:italic;'> Verze FW: %f Topic base: %s</span><br/><br/>\
           <p>Teplota: %3d,%02d °C Vlhkost: %3d \%Rh Napětí: %2d,%02d V</p>\
         </body>\
       </html>",
-      feedHumidity._id, 
+     versionSW, 
+     MQTTBASE,
 		 (int)(temperature/TEMPERATURE_DIVIDOR), ((int)temperature)%TEMPERATURE_DIVIDOR, (int)humidity, (int)voltage, ((int)(voltage*100.0))%100
 	);
 	serverA.send ( 200, "text/html", temp );
@@ -106,10 +124,12 @@ int readConfig(void);
 bool startsWith(const char *, const char *);
 String getValue(String, char, int);
 
+
+
 void setup() {
   Serial.begin(PORTSPEED);
-  Serial.println();
-  Serial.println("Vlhkoměr");
+  DEBUG_PRINT(versionSWString);
+  DEBUG_PRINTLN(versionSW);
   //mode
   pinMode(5, INPUT_PULLUP);
   pinMode(4, INPUT_PULLUP);
@@ -123,8 +143,8 @@ void setup() {
   } else if (d1==1 && d2==1) {
     mode = 4;
   }
-  Serial.print("Mode:");
-  Serial.println(mode);
+  DEBUG_PRINT("Mode:");
+  DEBUG_PRINTLN(mode);
 
   if (mode==2) { //setup
     delay(1000);
@@ -135,39 +155,39 @@ void setup() {
     ssid = "ESPHum";
     password = "humidity007";
 
-    Serial.println();
-    Serial.print("Configuring access point...");
+    DEBUG_PRINTLN();
+    DEBUG_PRINT("Configuring access point...");
     /* You can remove the password parameter if you want the AP to be open. */
     WiFi.softAP(ssid, password);
 
     IPAddress myIP = WiFi.softAPIP();
-    Serial.print("AP IP address: ");
-    Serial.println(myIP);
-    Serial.print("SSID: ");
-    Serial.println(ssid);
-    Serial.print("Password: ");
-    Serial.println(password);
+    DEBUG_PRINT("AP IP address: ");
+    DEBUG_PRINTLN(myIP);
+    DEBUG_PRINT("SSID: ");
+    DEBUG_PRINTLN(ssid);
+    DEBUG_PRINT("Password: ");
+    DEBUG_PRINTLN(password);
     server.begin();
-    Serial.println("HTTP server started");
+    DEBUG_PRINTLN("HTTP server started");
     HttpHeader = "";
     
     readConfig();
     
   } else if (mode==3 || mode==4) { //test a mereni
     if (readConfig()>0) {
-      Serial.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-      Serial.println("!!!! Zařízení není nakonfigurované, končím !!!!!");
-      Serial.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+      DEBUG_PRINTLN("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+      DEBUG_PRINTLN("!!!! Zařízení není nakonfigurované, končím !!!!!");
+      DEBUG_PRINTLN("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
       return;
     }
   
     char *pch;
     byte s[HttpHeaderBak.length()];
     HttpHeaderBak.getBytes(s, HttpHeaderBak.length());
-    Serial.println(HttpHeaderBak);
+    DEBUG_PRINTLN(HttpHeaderBak);
     pch = strtok((char*)s,"?&=");
     while (pch != NULL) {
-     Serial.println(pch);
+     DEBUG_PRINTLN(pch);
     if (startsWith("ssid",pch)) {
       ssid=strchr(pch,'=')+1;
     }
@@ -183,12 +203,20 @@ void setup() {
     if (startsWith("gateway",pch)) {
       gate=strchr(pch,'=')+1;
     }
-    if (startsWith("APIkey",pch)) {
-      memcpy(xivelyKey, strchr(pch,'=')+1, strlen(strchr(pch,'=')+1)+1);
-    }
-    if (startsWith("FeedID",pch)) {
-      feedId=strchr(pch,'=')+1;
-    }
+
+    // if (startsWith("brokerIP",pch)) {
+      // brokerIP=strchr(pch,'=')+1;
+    // }
+    // if (startsWith("brokerPort",pch)) {
+      // brokerPort=strchr(pch,'=')+1;
+    // }
+    // if (startsWith("brokerUser",pch)) {
+      // brokerUser=strchr(pch,'=')+1;
+    // }
+    // if (startsWith("brokerPassword",pch)) {
+      // brokerPassword=strchr(pch,'=')+1;
+    // }
+
     if (startsWith("delay",pch)) {
       sleepDelayInSeconds=strchr(pch,'=')+1;
     }
@@ -198,7 +226,13 @@ void setup() {
     IPAddress _ip(getValue(ip, '.', 0).toInt(), getValue(ip, '.', 1).toInt(), getValue(ip, '.', 2).toInt(), getValue(ip, '.', 3).toInt());
     IPAddress _gateway(getValue(gate, '.', 0).toInt(), getValue(gate, '.', 1).toInt(), getValue(gate, '.', 2).toInt(), getValue(gate, '.', 3).toInt());
     IPAddress _mask(getValue(mask, '.', 0).toInt(), getValue(mask, '.', 1).toInt(), getValue(mask, '.', 2).toInt(), getValue(mask, '.', 3).toInt());
-     
+
+    // Adafruit_MQTT_Client mqtt(&client, brokerIP.c_str(), (uint16_t)brokerPort.toInt(), brokerUser.c_str(), brokerPassword.c_str());
+    /****************************** Feeds ***************************************/
+    // Adafruit_MQTT_Publish _temperature             = Adafruit_MQTT_Publish(&mqtt, "/holcik/Vlhkomer5/Temperature");
+    // Adafruit_MQTT_Publish _humidity                = Adafruit_MQTT_Publish(&mqtt, "/holcik/Vlhkomer5/Humidity");
+    // Adafruit_MQTT_Publish _versionSW               = Adafruit_MQTT_Publish(&mqtt, "/holcik/Vlhkomer5/VersionSW");
+    
     WiFi.mode(WIFI_STA);
     WiFi.config(_ip, _gateway, _mask);
     
@@ -207,8 +241,8 @@ void setup() {
     ssid.toCharArray(_ssid, ssid.length()+1);
     passw.toCharArray(_passw, passw.length()+1); 
     
-    Serial.println(_ssid);
-    Serial.println(_passw);
+    DEBUG_PRINTLN(_ssid);
+    DEBUG_PRINTLN(_passw);
 
     WiFi.begin(_ssid, _passw);
 
@@ -216,14 +250,14 @@ void setup() {
     while (WiFi.status() != WL_CONNECTED) {
       cyklu++;
       delay(ONECYCLE_IN_MS);
-      Serial.print(".");
+      DEBUG_PRINT(".");
       if (cyklu*ONECYCLE_IN_MS>TIMEOUTFORWIFI_IN_MS) {
-        Serial.println();
+        DEBUG_PRINTLN();
         if (mode==3) {
-          Serial.print("Wifi unavailable, restart.");
+          DEBUG_PRINT("Wifi unavailable, restart.");
           ESP.restart();
         } else {
-          Serial.print("Wifi unavailable, go to deepsleep for 5 minutes");
+          DEBUG_PRINT("Wifi unavailable, go to deepsleep for 5 minutes");
           ESP.deepSleep(300 * MICROSECOND, WAKE_RF_DEFAULT);
         }
       }
@@ -233,40 +267,33 @@ void setup() {
       while (WiFi.status() != WL_CONNECTED) {
         cyklu++;
         delay(ONECYCLE_IN_MS);
-        Serial.print(".");
+        DEBUG_PRINT(".");
         if (cyklu*ONECYCLE_IN_MS>TIMEOUTFORWIFI_IN_MS) {
-          Serial.println();
-          Serial.print("Wifi unavailable, go to deepsleep for 5 minutes");
+          DEBUG_PRINTLN();
+          DEBUG_PRINT("Wifi unavailable, go to deepsleep for 5 minutes");
           ESP.deepSleep(300 * MICROSECOND, WAKE_RF_DEFAULT);
         }
       }
     }
 
-    feedHumidity._id = feedId.toInt();
-    
-    Serial.println("");
-    Serial.println("WiFi connected");  
-    Serial.print("IP address: ");
-    Serial.println(WiFi.localIP());
-    Serial.print("Gateway: ");
-    Serial.println(WiFi.gatewayIP());
-    Serial.print("Subnet: ");
-    Serial.println(WiFi.subnetMask());
-    Serial.print("MAC: ");
-    Serial.println(WiFi.macAddress());
-    Serial.print("Interval: ");
-    Serial.print(sleepDelayInSeconds);
-    Serial.println(" seconds");
-    Serial.print("Feed ID:");
-    Serial.println(feedId.toInt());
-    Serial.print("APIkey:");
-    Serial.println(xivelyKey);
-
+    DEBUG_PRINTLN("");
+    DEBUG_PRINTLN("WiFi connected");  
+    DEBUG_PRINT("IP address: ");
+    DEBUG_PRINTLN(WiFi.localIP());
+    DEBUG_PRINT("Gateway: ");
+    DEBUG_PRINTLN(WiFi.gatewayIP());
+    DEBUG_PRINT("Subnet: ");
+    DEBUG_PRINTLN(WiFi.subnetMask());
+    DEBUG_PRINT("MAC: ");
+    DEBUG_PRINTLN(WiFi.macAddress());
+    DEBUG_PRINT("Interval: ");
+    DEBUG_PRINT(sleepDelayInSeconds);
+    DEBUG_PRINTLN(" seconds");
 
     sensor.begin(SDA,SCL);
     serverA.on ( "/", handleRoot );
   	serverA.begin();
-    Serial.println ( "HTTP server started" );
+    DEBUG_PRINTLN ( "HTTP server started" );
   }
 }
 
@@ -298,7 +325,7 @@ void loop() {
              HttpHeader.getBytes(s, HttpHeader.length());
              pch = strtok((char*)s,"?&=");
              while (pch != NULL) {
-               Serial.println(pch);
+               DEBUG_PRINTLN(pch);
               if (startsWith("ssid",pch)) {
                 ssid=strchr(pch,'=')+1;
               }
@@ -314,12 +341,18 @@ void loop() {
               if (startsWith("gateway",pch)) {
                 gate=strchr(pch,'=')+1;
               }
-              if (startsWith("APIkey",pch)) {
-                key=strchr(pch,'=')+1;
-              }
-              if (startsWith("FeedID",pch)) {
-                feedId=strchr(pch,'=')+1;
-              }
+              // if (startsWith("brokerIP",pch)) {
+                // brokerIP=strchr(pch,'=')+1;
+              // }
+              // if (startsWith("brokerPort",pch)) {
+                // brokerPort=strchr(pch,'=')+1;
+              // }
+              // if (startsWith("brokerUser",pch)) {
+                // brokerUser=strchr(pch,'=')+1;
+              // }
+              // if (startsWith("brokerPassword",pch)) {
+                // brokerPassword=strchr(pch,'=')+1;
+              // }
               if (startsWith("delay",pch)) {
                 sleepDelayInSeconds=strchr(pch,'=')+1;
               }
@@ -333,7 +366,7 @@ void loop() {
              // client.println();
              client.print("<html><head><meta charset='UTF-8'></head><style> body { background-color: #cccccc; font-family: Arial, Helvetica, Sans-Serif; Color: #000088; }</style>");
              client.print("<form>");
-             client.print("<span style='font-weight:bold; font-size:20pt;'>Vlhkoměr</span><span style='font-style:italic;'> Verze FW: 1.0.5</span><br/><br/>");
+             client.print("<span style='font-weight:bold; font-size:20pt;'>Vlhkoměr</span><span style='font-style:italic;'>v1.0 Topic base: /holcik/Vlhkomer4/</span><br/><br/>");
              client.print("<table><tr><td style='text-align:right;'>AP SSID:</td><td><input type='text' name=ssid value='");
              client.print(ssid);
              client.print("'/></td></tr>");
@@ -341,8 +374,10 @@ void loop() {
              client.print("<tr><td style='text-align:right;'>IP:</td><td><input type='text' name='ip' maxlength='15' value='" + ip + "'/></td></tr>");
              client.print("<tr><td style='text-align:right;'>Maska:</td><td><input type='text' name='mask' maxlength='15' value='" + mask + "'/></td></tr>");
              client.print("<tr><td style='text-align:right;'>Gateway:</td><td><input type='text' name='gateway' maxlength='15' value='" + gate + "'/></td></tr>");
-             client.print("<tr><td style='text-align:right;'>Xively API key:</td><td><input type='text' name='APIkey' value='" + key + "'/></td></tr>");
-             client.print("<tr><td style='text-align:right;'>Feed ID:</td><td><input type='text' name='FeedID' value='" + feedId + "'/></td></tr>");
+             // client.print("<tr><td style='text-align:right;'>MQTT Broker IP:</td><td><input type='text' name='brokerIP' maxlength='15' value='" + brokerIP + "'/></td></tr>");
+             // client.print("<tr><td style='text-align:right;'>MQTT Broker port:</td><td><input type='text' name='brokerPort' maxlength='5' value='" + brokerPort + "'/></td></tr>");
+             // client.print("<tr><td style='text-align:right;'>MQTT Broker user:</td><td><input type='text' name='brokerUser' maxlength='15' value='" + brokerUser + "'/></td></tr>");
+             // client.print("<tr><td style='text-align:right;'>MQTT Broker password:</td><td><input type='text' name='brokerPassword' maxlength='15' value='" + brokerPassword + "'/></td></tr>");
              client.print("<tr><td style='text-align:right;'>Prodleva mezi měřeními [s]:</td><td><input type='text' name='delay' maxlength='5' value='" + sleepDelayInSeconds + "'/></td></tr>");
              client.print("<tr><td style='text-align:right'><input type=submit name=ulozit value='Uložit'></td>");
              // client.print("<td style='text-align:right'><input type=submit name=reset value='Reset'></td></tr>");
@@ -353,11 +388,11 @@ void loop() {
               // open file for writing
               File f = SPIFFS.open("/config.txt", "w");
               if (!f) {
-                  Serial.println("file open failed");
+                  DEBUG_PRINTLN("file open failed");
               }
-              Serial.println("====== Writing to SPIFFS file =========");
-              Serial.print("HttpHeader:");
-              Serial.println(HttpHeader);
+              DEBUG_PRINTLN("====== Writing to SPIFFS file =========");
+              DEBUG_PRINT("HttpHeader:");
+              DEBUG_PRINTLN(HttpHeader);
               // write 10 strings to file
               f.println(HttpHeader);
               f.close();
@@ -375,46 +410,35 @@ void loop() {
     humidity=sensor.getHumidityPercent();
     if (millis() - lastDisp >= dispDelay) {
       lastDisp = millis();
-      Serial.print("Temperature:");
-      Serial.print(temperature/TEMPERATURE_DIVIDOR);
-      Serial.println("C");
-      Serial.print("Humidity:");
-      Serial.print(humidity);
-      Serial.println("%");
+      DEBUG_PRINT("Temperature:");
+      DEBUG_PRINT(temperature/TEMPERATURE_DIVIDOR);
+      DEBUG_PRINTLN("C");
+      DEBUG_PRINT("Humidity:");
+      DEBUG_PRINT(humidity);
+      DEBUG_PRINTLN("%");
       voltage = (float)ESP.getVcc()/MILIVOLT_TO_VOLT;
-      Serial.print("Voltage:");
-      Serial.print(voltage);
-      Serial.println("V");
-      Serial.println();
+      DEBUG_PRINT("Voltage:");
+      DEBUG_PRINT(voltage);
+      DEBUG_PRINTLN("V");
+      DEBUG_PRINTLN();
     }
     if (mode==3) {
       serverA.handleClient();
     }
     if (millis() - lastSend >= sendDelay) {
       lastSend = millis();
-      if (!clientXively.connected()) {
-        datastreamsHumidity[0].setFloat(humidity);
-        datastreamsHumidity[1].setFloat(temperature/TEMPERATURE_DIVIDOR);
-        datastreamsHumidity[2].setFloat(voltage);
-        datastreamsHumidity[3].setFloat((float)(millis() - start)/MILLIS_TO_SEC);
-        Serial.print("uploading data to xively, Feed:");
-        Serial.print(feedHumidity._id);
-        Serial.print(" xivelyKey:");
-        Serial.println(xivelyKey);
-        int ret = xivelyClientHumidity.put(feedHumidity, xivelyKey);
-        
-        Serial.print(F("xivelyClientHumidity.put returned "));
-        Serial.println(ret);
-      }
+      //send MQTT data
+      sendDataHA();
     }
     if (mode==4) { //mererni
-      Serial.print("Start duration:");
-      Serial.print(millis()-start);
-      Serial.println(" ms.");
-      Serial.println("Entering deep sleep mode.");
-      Serial.print("Wake in ");
-      Serial.print(sleepDelayInSeconds);
-      Serial.println(" s.");
+      DEBUG_PRINT("Start duration:");
+      DEBUG_PRINT(millis()-start);
+      DEBUG_PRINTLN(" ms.");
+      DEBUG_PRINTLN("Entering deep sleep mode.");
+      DEBUG_PRINT("Wake in ");
+      DEBUG_PRINT(sleepDelayInSeconds);
+      DEBUG_PRINTLN(" s.");
+      delay(2000);
       ESP.deepSleep(sleepDelayInSeconds.toInt() * MICROSECOND, WAKE_RF_DEFAULT);
     }
   }
@@ -428,17 +452,17 @@ bool startsWith(const char *pre, const char *str) {
 
 
 int readConfig() {
-  Serial.println("Read config file.");
+  DEBUG_PRINTLN("Read config file.");
   SPIFFS.begin();
   // open file for reading
   File f = SPIFFS.open("/config.txt", "r");
   if (!f) {
-    Serial.println("file open failed");
+    DEBUG_PRINTLN("file open failed");
     return 1;
   } else {
-    Serial.println("====== Reading from SPIFFS file =======");
+    DEBUG_PRINTLN("====== Reading from SPIFFS file =======");
     HttpHeaderBak=f.readStringUntil('\n');
-    Serial.println(HttpHeaderBak);
+    DEBUG_PRINTLN(HttpHeaderBak);
   }
   return 0;
 }
@@ -458,4 +482,59 @@ String getValue(String data, char separator, int index) {
   }
 
   return found>index ? data.substring(strIndex[0], strIndex[1]) : "";
+}
+
+void sendDataHA() {
+  DEBUG_PRINTLN(" I am sending data from humidity and temperature sensor to HomeAssistant");
+  MQTT_connect();
+  if (! _temperature.publish(temperature/TEMPERATURE_DIVIDOR)) {
+    DEBUG_PRINTLN("Temperature failed");
+  } else {
+    DEBUG_PRINTLN("Temperature OK!");
+  }  
+  if (! _humidity.publish(humidity)) {
+    DEBUG_PRINTLN("Humidity failed");
+  } else {
+    DEBUG_PRINTLN("Humidity OK!");
+  }  
+  if (! _voltage.publish(voltage)) {
+    DEBUG_PRINTLN("Voltage failed");
+  } else {
+    DEBUG_PRINTLN("Voltage OK!");
+  }  
+  if (! _bootTime.publish((uint8_t)(millis()-start))) {
+    DEBUG_PRINTLN("BootTime failed");
+  } else {
+    DEBUG_PRINTLN("BootTime OK!");
+  }  
+  if (! _versionSW.publish(versionSW)) {
+    DEBUG_PRINTLN("Version SW failed");
+  } else {
+    DEBUG_PRINTLN("Version SW OK!");
+  }  
+}
+ 
+void MQTT_connect() {
+  int8_t ret;
+
+  // Stop if already connected.
+  if (mqtt.connected()) {
+    return;
+  }
+
+  DEBUG_PRINT("Connecting to MQTT... ");
+
+  uint8_t retries = 3;
+  while ((ret = mqtt.connect()) != 0) { // connect will return 0 for connected
+       DEBUG_PRINTLN(mqtt.connectErrorString(ret));
+       DEBUG_PRINTLN("Retrying MQTT connection in 5 seconds...");
+       mqtt.disconnect();
+       delay(5000);  // wait 5 seconds
+       retries--;
+       if (retries == 0) {
+         // basically die and wait for WDT to reset me
+         while (1);
+       }
+  }
+  DEBUG_PRINTLN("MQTT Connected!");
 }
