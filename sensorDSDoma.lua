@@ -1,7 +1,7 @@
 --Init  
 bootTime                   = tmr.now()
-base                       = "/home/sklenik/esp10/"
-deviceID                   = "ESP8266 Sklenik "..node.chipid()
+base                       = "/flat/humidity/esp11/"
+deviceID                   = "ESP8266 Humidity "..node.chipid()
 maxStartTime               = 10000 --10sec
 sleepDelayWhenNoConnection = 3600000000 --1 hour
 microsToSec                = 1000000
@@ -25,10 +25,10 @@ then
   return -- don't bother continuing, the restart is scheduled
 end
 
-Broker="192.168.1.56"  
+Broker="178.77.238.20"  
 
-versionSW         = 0.34
-versionSWString   = "Sklenik v" 
+versionSW         = 0.1
+versionSWString   = "Humidity v" 
 print(versionSWString .. versionSW)
 
 si7021 = require("si7021")
