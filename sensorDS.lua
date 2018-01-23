@@ -25,9 +25,12 @@ then
   return -- don't bother continuing, the restart is scheduled
 end
 
+napeti = adc.readvdd33()/mVoltsToVolts
+print("Napeti baterie: "..napeti.." V")
+
 Broker="192.168.1.56"  
 
-versionSW         = 0.34
+versionSW         = 0.4
 versionSWString   = "Sklenik v" 
 print(versionSWString .. versionSW)
 

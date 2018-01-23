@@ -26,7 +26,7 @@ tmr.alarm(0, 1000, 1, function()
     remaining, used, total=file.fsinfo()
     print("\nFile system info:\nTotal : "..total.." Bytes\nUsed : "..used.." Bytes\nRemain: "..remaining.." Bytes")
     print("\nReady")
-    dofile("sensorDS.lua")    --  calls servernode.lua  
+    dofile("sensorDSDoma.lua")    --  calls servernode.lua  
   end
 end)
 
