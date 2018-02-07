@@ -50,7 +50,8 @@ String ip;
 String mask;
 String gate;
 
-#define AIO_SERVER      "192.168.1.56"
+//#define AIO_SERVER      "192.168.1.56"
+#define AIO_SERVER      "178.77.268.20"
 #define AIO_SERVERPORT  1883
 #define AIO_USERNAME    "datel"
 #define AIO_KEY         "hanka12"
@@ -62,7 +63,7 @@ String brokerPassword;
 
 WiFiClient client;
 
-#define MQTTBASE "/holcik/Vlhkomer4/"
+#define MQTTBASE "/holcik/Vlhkomer1/"
 
 Adafruit_MQTT_Client mqtt(&client, AIO_SERVER, AIO_SERVERPORT, AIO_USERNAME, AIO_KEY);
 Adafruit_MQTT_Publish _temperature             = Adafruit_MQTT_Publish(&mqtt, MQTTBASE "Temperature");
@@ -92,7 +93,7 @@ float voltage;
 
 WiFiServer server(80);
 
-float versionSW=1.0;
+float versionSW=1.1;
 char versionSWString[] = "Vlhkoměr v"; //SW name & version
 
 void handleRoot() {
@@ -109,11 +110,10 @@ void handleRoot() {
           </style>\
         </head>\
         <body>\
-          <span style='font-weight:bold; font-size:20pt;'>Vlhkoměr</span><span style='font-style:italic;'> Verze FW: %f Topic base: %s</span><br/><br/>\
+          <span style='font-weight:bold; font-size:20pt;'>Vlhkoměr</span><span style='font-style:italic;'> Verze FW:1.1 Topic base: %s</span><br/><br/>\
           <p>Teplota: %3d,%02d °C Vlhkost: %3d \%Rh Napětí: %2d,%02d V</p>\
         </body>\
       </html>",
-     versionSW, 
      MQTTBASE,
 		 (int)(temperature/TEMPERATURE_DIVIDOR), ((int)temperature)%TEMPERATURE_DIVIDOR, (int)humidity, (int)voltage, ((int)(voltage*100.0))%100
 	);
@@ -366,7 +366,11 @@ void loop() {
              // client.println();
              client.print("<html><head><meta charset='UTF-8'></head><style> body { background-color: #cccccc; font-family: Arial, Helvetica, Sans-Serif; Color: #000088; }</style>");
              client.print("<form>");
-             client.print("<span style='font-weight:bold; font-size:20pt;'>Vlhkoměr</span><span style='font-style:italic;'>v1.0 Topic base: /holcik/Vlhkomer4/</span><br/><br/>");
+             client.print("<span style='font-weight:bold; font-size:20pt;'>Vlhkoměr</span><span style='font-style:italic;'>v");
+             client.print(versionSW);
+             client.print("Topic base: ");
+             client.print(MQTTBASE);             
+             client.print("</span><br/><br/>");
              client.print("<table><tr><td style='text-align:right;'>AP SSID:</td><td><input type='text' name=ssid value='");
              client.print(ssid);
              client.print("'/></td></tr>");
