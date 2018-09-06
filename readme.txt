@@ -79,7 +79,7 @@ Napìtí baterie V
 
 4.Mìøení
 --------
-Pøepínaè 1 je v poloze OFF, Pøepínaè 2 v poloze OFF, Pøepínaè 3 je v poloze OFF.
+Pøepínaè 1 je v poloze OFF, Pøepínaè 2 v poloze OFF, Pøepínaè 3 je v poloze ON.
 ---------
 | O     |   Pøepínaè 3
 |     O |   Pøepínaè 2
