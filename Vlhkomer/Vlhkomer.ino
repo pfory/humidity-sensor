@@ -51,7 +51,7 @@ String mask;
 String gate;
 
 //#define AIO_SERVER      "192.168.1.56"
-#define AIO_SERVER      "178.77.268.20"
+#define AIO_SERVER      "178.77.238.20"
 #define AIO_SERVERPORT  1883
 #define AIO_USERNAME    "datel"
 #define AIO_KEY         "hanka12"
@@ -63,7 +63,7 @@ String brokerPassword;
 
 WiFiClient client;
 
-#define MQTTBASE "/holcik/Vlhkomer1/"
+#define MQTTBASE "/holcik/Vlhkomer3/"
 
 Adafruit_MQTT_Client mqtt(&client, AIO_SERVER, AIO_SERVERPORT, AIO_USERNAME, AIO_KEY);
 Adafruit_MQTT_Publish _temperature             = Adafruit_MQTT_Publish(&mqtt, MQTTBASE "Temperature");
