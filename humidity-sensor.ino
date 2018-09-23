@@ -13,7 +13,8 @@ Vlhomer ESP8266-201
 //for LED status
 #include <Ticker.h>
 
-unsigned long start=millis();
+unsigned long       start=0;
+unsigned long       bootTime;
 
 Ticker ticker;
 
@@ -24,6 +25,8 @@ void tick()
   digitalWrite(BUILTIN_LED, !state);     // set pin to the opposite state
 }
   
+//#define PORADI1
+#define PORADI2
   
 #define verbose
 #ifdef verbose
@@ -51,16 +54,26 @@ WiFiClient client;
 Adafruit_MQTT_Client mqtt(&client, AIO_SERVER, AIO_SERVERPORT, AIO_USERNAME, AIO_KEY);
 
 /****************************** Feeds ***************************************/
+#ifdef PORADI1
 #define MQTTBASE "/home/Vlhkomer/1/"
+#endif
+#ifdef PORADI2
+#define MQTTBASE "/home/Vlhkomer/2/"
+#endif
 Adafruit_MQTT_Publish _temperature             = Adafruit_MQTT_Publish(&mqtt, MQTTBASE "Temperature");
 Adafruit_MQTT_Publish _humidity                = Adafruit_MQTT_Publish(&mqtt, MQTTBASE "Humidity");
 Adafruit_MQTT_Publish _bootTime                = Adafruit_MQTT_Publish(&mqtt, MQTTBASE "bootTime");
 Adafruit_MQTT_Publish _voltage                 = Adafruit_MQTT_Publish(&mqtt, MQTTBASE "Voltage");
 Adafruit_MQTT_Publish _versionSW               = Adafruit_MQTT_Publish(&mqtt, MQTTBASE "VersionSW");
 
-// IPAddress _ip           = IPAddress(192, 168, 1, 106);
-// IPAddress _gw           = IPAddress(192, 168, 1, 1);
-// IPAddress _sn           = IPAddress(255, 255, 255, 0);
+#ifdef PORADI1
+IPAddress _ip           = IPAddress(192, 168, 1, 111);
+#endif
+#ifdef PORADI2
+IPAddress _ip           = IPAddress(192, 168, 1, 112);
+#endif
+IPAddress _gw           = IPAddress(192, 168, 1, 1);
+IPAddress _sn           = IPAddress(255, 255, 255, 0);
 
 
 void MQTT_connect(void);
@@ -79,7 +92,9 @@ unsigned int sleepDelayInSeconds = 600; //10 min
 
 #define TEMPERATURE_DIVIDOR 100
 #define MILIVOLT_TO_VOLT 1000.0
+#define MILISECOND_TO_SECOND 1000.0
 #define MICROSECOND 1000000
+
 
 #define SDA 12 // D6 - GPI12 on ESP-201 module
 #define SCL 14 // D5 - GPI14 on ESP-201 module
@@ -94,17 +109,27 @@ void configModeCallback (WiFiManager *myWiFiManager) {
   ticker.attach(0.2, tick);
 }
 
-float versionSW                   = 0.1;
+ADC_MODE(ADC_VCC);
+
+float versionSW                   = 0.2;
+#ifdef PORADI1
 String versionSWString            = "Vlhomer#1 v";
+#endif
+#ifdef PORADI2
+String versionSWString            = "Vlhomer#2 v";
+#endif
 uint32_t heartBeat                = 0;
 
 void setup() {
+  start = millis();
 #ifdef verbose
   Serial.begin(PORTSPEED);
 #endif
   DEBUG_PRINTLN();
   DEBUG_PRINT(versionSWString);
   DEBUG_PRINTLN(versionSW);
+  DEBUG_PRINT("START:");
+  DEBUG_PRINTLN(start);
   //set led pin as output
   pinMode(BUILTIN_LED, OUTPUT);
   // start ticker with 0.5 because we start in AP mode and try to connect
@@ -130,9 +155,15 @@ void setup() {
   //WiFiManager
   WiFiManager wifiManager;
   //set callback that gets called when connecting to previous WiFi fails, and enters Access Point mode
+  wifiManager.setSTAStaticIPConfig(_ip, _gw, _sn);
   wifiManager.setAPCallback(configModeCallback);
   
+  #ifdef PORADI1
   if (!wifiManager.autoConnect("Vlhkomer1", "password")) {
+  #endif
+  #ifdef PORADI2
+  if (!wifiManager.autoConnect("Vlhkomer2", "password")) {
+  #endif
     DEBUG_PRINTLN("failed to connect, we should reset as see if it connects");
     delay(3000);
     ESP.reset();
@@ -154,8 +185,10 @@ void setup() {
 void loop() {
   MQTT_connect();
 
+  DEBUG_PRINT("Meassurement....");
   temperature=sensor.getCelsiusHundredths();
   humidity=sensor.getHumidityPercent();
+  DEBUG_PRINTLN("DONE");
   DEBUG_PRINT("Temperature:");
   DEBUG_PRINT(temperature/TEMPERATURE_DIVIDOR);
   DEBUG_PRINTLN("C");
@@ -183,25 +216,30 @@ void loop() {
   } else {
     DEBUG_PRINTLN("Voltage OK!");
   }  
-  if (! _bootTime.publish((uint8_t)(millis()-start))) {
-    DEBUG_PRINTLN("BootTime failed");
-  } else {
-    DEBUG_PRINTLN("BootTime OK!");
-  }  
   if (! _versionSW.publish(versionSW)) {
     DEBUG_PRINTLN("Version SW failed");
   } else {
     DEBUG_PRINTLN("Version SW OK!");
   }  
-
+  
+  //boot time
+  bootTime = millis()-start;
+  DEBUG_PRINT("END:");
+  DEBUG_PRINTLN(millis());
+  if (! _bootTime.publish((float)(bootTime/MILISECOND_TO_SECOND))) {
+    DEBUG_PRINTLN("BootTime failed");
+  } else {
+    DEBUG_PRINTLN("BootTime OK!");
+  }  
     
   DEBUG_PRINT("Start duration:");
-  DEBUG_PRINT(millis()-start);
+  DEBUG_PRINT(bootTime);
   DEBUG_PRINTLN(" ms.");
   DEBUG_PRINTLN("Entering deep sleep mode.");
   DEBUG_PRINT("Wake in ");
   DEBUG_PRINT(sleepDelayInSeconds);
   DEBUG_PRINTLN(" s.");
+  delay(1000);
   ESP.deepSleep(sleepDelayInSeconds * MICROSECOND, WAKE_RF_DEFAULT);
 }
 
