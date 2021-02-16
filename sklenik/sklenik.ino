@@ -149,8 +149,11 @@ void loop(void) {
   if (voltage > 4000) {
     deepSleepMicros = 600e6; //10min
   } else if (voltage > 3300) {
+    deepSleepMicros = 1800e6; //30min
+  } else {
     deepSleepMicros = 3600e6; //1hour
   }
+  
   DEBUG_PRINT("Deep sleep:");
   DEBUG_PRINT(deepSleepMicros/1e6);
   DEBUG_PRINTLN(" sec.");
