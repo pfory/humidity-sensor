@@ -1,16 +1,16 @@
 #ifndef CONFIGURATION_H
 #define CONFIGURATION_H
 
-#include <ESP8266WiFi.h>          //https://github.com/esp8266/Arduino
-#include <WiFiManager.h>          //https://github.com/tzapu/WiFiManager
+#include <ESP8266WiFi.h>              //https://github.com/esp8266/Arduino
+#include <WiFiManager.h>              //https://github.com/tzapu/WiFiManager
 #include "Sender.h"
 #include <DoubleResetDetector.h>      //https://github.com/khoih-prog/ESP_DoubleResetDetector
 #include <Ticker.h>
-#include "SI7021.h"
+#include "SI7021.h"                   //https://github.com/LowPowerLab/SI7021.git
 
 
 //SW name & version
-#define     VERSION                      "0.01"
+#define     VERSION                      "0.20"
 #define     SW_NAME                      "VlhkomerSklenik"
 
 //#define timers

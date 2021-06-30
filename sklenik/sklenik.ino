@@ -162,6 +162,11 @@ void loop(void) {
   DEBUG_PRINT("Sleep for ");
   DEBUG_PRINT(deepSleepMicros/1e6);
   DEBUG_PRINTLN(" sec.");
+  
+  DEBUG_PRINT("Boot time: ");
+  DEBUG_PRINT((uint16_t)(millis() - lastRun));
+  DEBUG_PRINTLN(" ms");
+
   ESP.deepSleep(deepSleepMicros);
 }
 
@@ -177,7 +182,7 @@ void sendDataMQTT(void) {
   sender.add("MAC",               WiFi.macAddress());
   sender.add("temperature",       temperature/TEMPERATURE_DIVIDOR);  
   sender.add("humidity",          humidity);
-  sender.add("bootTime",          (uint8_t)(millis() - lastRun));
+  sender.add("bootTime",          (uint16_t)(millis() - lastRun));
   sender.add("deepSleep",         (uint16_t)(deepSleepMicros/1e6));
   
   
